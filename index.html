@@ -64,6 +64,9 @@
     <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
+    <!-- Mermaid.js for Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
@@ -84,103 +87,71 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #c4b5fd;
         }
+        /* Mermaid specific styles */
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body class="bg-neutral-50 text-neutral-900 antialiased selection:bg-brand-200 selection:text-brand-900">
     <div id="root"></div>
 
     <script type="text/babel">
-        // API Key is injected by the environment or can be set manually for local testing
+        // API Key
         const apiKey = ""; 
 
         const { useState, useEffect, useRef } = React;
         
-        // --- Icons Components (SVG) - Minimalist Line Style ---
+        // Initialize Mermaid
+        mermaid.initialize({ 
+            startOnLoad: false, 
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#ede9fe',
+                primaryTextColor: '#4c1d95',
+                primaryBorderColor: '#8b5cf6',
+                lineColor: '#6b7280',
+                secondaryColor: '#f3f4f6',
+                tertiaryColor: '#fff',
+            }
+        });
+
+        // --- Icons Components (SVG) ---
         const IconBase = ({ children, className, onClick }) => (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} onClick={onClick}>
                 {children}
             </svg>
         );
 
-        const LayoutTemplate = ({ className }) => (
-            <IconBase className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="9" y2="21"/></IconBase>
-        );
-        const Loader2 = ({ className }) => (
-            <IconBase className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></IconBase>
-        );
-        const Sparkles = ({ className }) => (
-            <IconBase className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></IconBase>
-        );
-        const AlertTriangle = ({ className }) => (
-            <IconBase className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></IconBase>
-        );
-        const CheckCircle = ({ className }) => (
-            <IconBase className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconBase>
-        );
-        const Clipboard = ({ className }) => (
-            <IconBase className={className}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></IconBase>
-        );
-        const Check = ({ className }) => (
-            <IconBase className={className}><polyline points="20 6 9 17 4 12"/></IconBase>
-        );
-        const Zap = ({ className }) => (
-            <IconBase className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></IconBase>
-        );
-        const Box = ({ className }) => (
-            <IconBase className={className}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></IconBase>
-        );
-        const RefreshCw = ({ className }) => (
-            <IconBase className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></IconBase>
-        );
-        const Globe = ({ className }) => (
-            <IconBase className={className}><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></IconBase>
-        );
-        const ChevronDown = ({ className }) => (
-            <IconBase className={className}><polyline points="6 9 12 15 18 9"/></IconBase>
-        );
-        const ChevronUp = ({ className }) => (
-            <IconBase className={className}><polyline points="18 15 12 9 6 15"/></IconBase>
-        );
-        const Users = ({ className }) => (
-            <IconBase className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>
-        );
-        const Smartphone = ({ className }) => (
-            <IconBase className={className}><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></IconBase>
-        );
-        const ShieldAlert = ({ className }) => (
-            <IconBase className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></IconBase>
-        );
-        const Briefcase = ({ className }) => (
-            <IconBase className={className}><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></IconBase>
-        );
-        const Network = ({ className }) => (
-            <IconBase className={className}><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></IconBase>
-        );
-        const ExternalLink = ({ className }) => (
-            <IconBase className={className}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></IconBase>
-        );
-        const X = ({ className, onClick }) => (
-            <IconBase className={className} onClick={onClick}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>
-        );
-        const ImageIcon = ({ className }) => (
-            <IconBase className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></IconBase>
-        );
-        const ArrowLeft = ({ className }) => (
-            <IconBase className={className}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></IconBase>
-        );
-        const Target = ({ className }) => (
-            <IconBase className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></IconBase>
-        );
-        // History Icons
-        const HistoryIcon = ({ className }) => (
-            <IconBase className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></IconBase>
-        );
-        const Trash2 = ({ className }) => (
-            <IconBase className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>
-        );
-        const Clock = ({ className }) => (
-             <IconBase className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconBase>
-        );
+        const LayoutTemplate = ({ className }) => (<IconBase className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="9" y2="21"/></IconBase>);
+        const Loader2 = ({ className }) => (<IconBase className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></IconBase>);
+        const Sparkles = ({ className }) => (<IconBase className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></IconBase>);
+        const AlertTriangle = ({ className }) => (<IconBase className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></IconBase>);
+        const CheckCircle = ({ className }) => (<IconBase className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconBase>);
+        const Clipboard = ({ className }) => (<IconBase className={className}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></IconBase>);
+        const Check = ({ className }) => (<IconBase className={className}><polyline points="20 6 9 17 4 12"/></IconBase>);
+        const Zap = ({ className }) => (<IconBase className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></IconBase>);
+        const Box = ({ className }) => (<IconBase className={className}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></IconBase>);
+        const RefreshCw = ({ className }) => (<IconBase className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></IconBase>);
+        const Globe = ({ className }) => (<IconBase className={className}><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></IconBase>);
+        const ChevronDown = ({ className }) => (<IconBase className={className}><polyline points="6 9 12 15 18 9"/></IconBase>);
+        const ChevronUp = ({ className }) => (<IconBase className={className}><polyline points="18 15 12 9 6 15"/></IconBase>);
+        const Users = ({ className }) => (<IconBase className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>);
+        const Smartphone = ({ className }) => (<IconBase className={className}><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></IconBase>);
+        const ShieldAlert = ({ className }) => (<IconBase className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></IconBase>);
+        const Briefcase = ({ className }) => (<IconBase className={className}><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></IconBase>);
+        const Network = ({ className }) => (<IconBase className={className}><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></IconBase>);
+        const ExternalLink = ({ className }) => (<IconBase className={className}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></IconBase>);
+        const X = ({ className, onClick }) => (<IconBase className={className} onClick={onClick}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>);
+        const ImageIcon = ({ className }) => (<IconBase className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></IconBase>);
+        const ArrowLeft = ({ className }) => (<IconBase className={className}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></IconBase>);
+        const Target = ({ className }) => (<IconBase className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></IconBase>);
+        const HistoryIcon = ({ className }) => (<IconBase className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></IconBase>);
+        const Trash2 = ({ className }) => (<IconBase className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>);
+        const Clock = ({ className }) => (<IconBase className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconBase>);
+        const CodeIcon = ({ className }) => (<IconBase className={className}><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></IconBase>);
+        const Image = ({ className }) => (<IconBase className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></IconBase>);
 
 
         // --- Helper Function for JSON Parsing ---
@@ -205,6 +176,56 @@
             }
         };
 
+        // --- Helper: Fix Common Mermaid Errors ---
+        const fixCommonMermaidErrors = (code) => {
+            if (!code) return code;
+            let fixed = code;
+            // Attempt to wrap unquoted text in {} [] () with double quotes
+            // This regex looks for: ID + space + bracket + unquoted text + closing bracket
+            // It excludes text that already starts with "
+            fixed = fixed.replace(/([A-Za-z0-9_]+)(\s*\{)([^\n\"\}]+)(\})/g, '$1$2"$3"$4');
+            fixed = fixed.replace(/([A-Za-z0-9_]+)(\s*\()([^\n\"\)]+)(\))/g, '$1$2"$3"$4');
+            fixed = fixed.replace(/([A-Za-z0-9_]+)(\s*\[)([^\n\"\]]+)(\])/g, '$1$2"$3"$4');
+            return fixed;
+        };
+
+        // --- Mermaid Renderer Component ---
+        const MermaidDiagram = ({ code }) => {
+            const [svg, setSvg] = useState('');
+            const [error, setError] = useState(null);
+
+            useEffect(() => {
+                const render = async () => {
+                    if (!code) return;
+                    try {
+                        setError(null);
+                        // Mermaid needs a unique ID
+                        const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+                        const { svg } = await mermaid.render(id, code);
+                        setSvg(svg);
+                    } catch (err) {
+                        console.error("Mermaid error:", err);
+                        setError("流程圖語法生成錯誤，請嘗試切換至「原始碼」模式查看或重新生成。");
+                    }
+                };
+                render();
+            }, [code]);
+
+            if (error) return (
+                <div className="p-6 text-red-500 bg-red-50 rounded-xl border border-red-100 flex items-center gap-3">
+                    <AlertTriangle className="w-5 h-5 flex-shrink-0"/>
+                    <span>{error}</span>
+                </div>
+            );
+            
+            return (
+                <div 
+                    className="w-full overflow-x-auto bg-white p-6 flex justify-center min-h-[300px]"
+                    dangerouslySetInnerHTML={{ __html: svg }}
+                />
+            );
+        };
+
         // --- Main Component ---
         function UXFlowMaster() {
             const [view, setView] = useState('home'); // 'home' | 'result'
@@ -217,6 +238,7 @@
             const [checkedItems, setCheckedItems] = useState({});
             const [activeTab, setActiveTab] = useState('details');
             const [activeDetailTab, setActiveDetailTab] = useState('happy_path'); 
+            const [showDiagram, setShowDiagram] = useState(true); // Toggle for diagram/code
             
             // Advanced Settings State
             const [showAdvanced, setShowAdvanced] = useState(false);
@@ -252,6 +274,7 @@
                     setCheckedItems({});
                     setActiveTab('details');
                     setActiveDetailTab('happy_path'); 
+                    setShowDiagram(true);
                     setView('result'); // Switch to result view
                     window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top
                 }
@@ -277,7 +300,6 @@
                         constraints: params.constraints,
                         productType: params.productType,
                         designGoal: params.designGoal,
-                        // Note: deliberately NOT saving the base64 image to history to prevent LocalStorage quota overflow
                         hasImage: !!params.image 
                     }
                 };
@@ -295,12 +317,11 @@
                 setConstraints(params.constraints || '');
                 setProductType(params.productType || '');
                 setDesignGoal(params.designGoal || '');
-                setImage(null); // Clear image as we don't store it
+                setImage(null); 
                 
                 setResult(result);
-                // useEffect will handle view switch to 'result'
                 setShowHistory(false);
-                setShowAdvanced(true); // Open advanced settings to show loaded params
+                setShowAdvanced(true); 
             };
 
             const deleteHistoryItem = (e, id) => {
@@ -370,8 +391,6 @@
             const handleBackToHome = () => {
                 setView('home');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-                // Note: We keep the input state so user can modify it. 
-                // If they want to clear, they can delete the text manually.
             };
 
             const generateFlows = async () => {
@@ -419,6 +438,13 @@
                         6. competitor_references: 競品參考 (Competitor References)
                         7. user_flow_mermaid: 一個完整的 Mermaid.js flowchart 字串。
                         
+                        **強制語法規則 (CRITICAL SYNTAX RULES):**
+                        1. **所有**節點標籤文字 **必須** 用雙引號包起來。
+                           - 錯誤: A(開始), B{是否成功?}, C(輸入 (Code)), D{輸入驗證碼 (6位數)}
+                           - 正確: A("開始"), B{"是否成功?"}, C["輸入 (Code)"], D{"輸入驗證碼 (6位數)"}
+                        2. 若文字內有雙引號，請轉為單引號。
+                        3. 這是為了避免括號 () 或 {} 造成 Parse Error。
+                        
                         請以嚴格的 JSON 格式回傳，不要使用 markdown code block，不要有任何註釋。
                         Response MUST be valid JSON string only.
                         {
@@ -464,6 +490,12 @@
                     const text = data.candidates[0].content.parts[0].text;
                     
                     const parsedData = parseGeminiResponse(text);
+                    
+                    // Apply auto-fix for common mermaid errors
+                    if (parsedData.user_flow_mermaid) {
+                        parsedData.user_flow_mermaid = fixCommonMermaidErrors(parsedData.user_flow_mermaid);
+                    }
+                    
                     setResult(parsedData);
                     
                     // Save to history upon success
@@ -574,14 +606,15 @@
                         <div className="fixed top-6 right-6 z-30 flex gap-2">
                              <button 
                                 onClick={() => setShowHistory(true)}
-                                className="bg-white p-2.5 rounded-xl shadow-md border border-gray-100 text-gray-500 hover:text-brand-600 hover:border-brand-200 transition-all group relative"
+                                className="flex items-center gap-2 bg-white px-5 py-3 rounded-full shadow-lg border border-gray-200 text-neutral-600 font-bold hover:text-brand-600 hover:border-brand-300 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all group relative"
                                 title="歷史紀錄"
                             >
                                 <HistoryIcon className="w-5 h-5" />
+                                <span>歷史紀錄</span>
                                 {history.length > 0 && (
-                                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                    <span className="absolute top-0 right-0 flex h-3 w-3">
                                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
-                                      <span className="relative inline-flex rounded-full h-3 w-3 bg-brand-500"></span>
+                                      <span className="relative inline-flex rounded-full h-3 w-3 bg-brand-500 border-2 border-white box-content"></span>
                                     </span>
                                 )}
                             </button>
@@ -668,7 +701,7 @@
                             <div className="w-full flex flex-col justify-center space-y-8">
                                 
                                 {/* Branding Header */}
-                                <div className="flex flex-col gap-2 items-center text-center">
+                                <div className="flex flex-col gap-5 items-center text-center">
                                     <div className="flex items-center gap-3">
                                         <div className="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-200">
                                             <LayoutTemplate className="w-7 h-7 text-white" />
@@ -681,10 +714,10 @@
                                 </div>
 
                                 {/* Main Input Card */}
-                                <div className="bg-white border border-gray-100 shadow-xl shadow-brand-50/50 rounded-3xl p-8 space-y-6 w-full">
+                                <div className="bg-white border border-gray-100 shadow-xl shadow-brand-50/50 rounded-3xl p-8 space-y-8 w-full">
                                     
                                     {/* Main Input Area */}
-                                    <div className="space-y-3">
+                                    <div className="space-y-4">
                                         <label className="block text-sm font-bold text-neutral-800 ml-1">
                                             你想繪製什麼功能流程？
                                         </label>
@@ -736,72 +769,58 @@
                                         </div>
 
                                         {/* Suggestion Chips */}
-                                        <div className="flex flex-wrap gap-2 items-center">
-                                            {['綁定手機號碼', '重設密碼流程', '購物車結帳', '個人資料編輯'].map(chip => (
-                                                <button 
-                                                    key={chip}
-                                                    onClick={() => setInput(chip)}
-                                                    className="px-3 py-1 text-sm bg-gray-50 border border-gray-100 rounded-full text-neutral-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all"
-                                                >
-                                                    {chip}
-                                                </button>
+                                    <div className="flex flex-wrap gap-2 items-center">
+                                        {['綁定手機號碼', '重設密碼流程', '購物車結帳', '個人資料編輯'].map(chip => (
+                                            <button 
+                                                key={chip}
+                                                onClick={() => setInput(chip)}
+                                                className="px-3 py-1 text-sm bg-gray-50 border border-gray-100 rounded-full text-neutral-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all"
+                                            >
+                                                {chip}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Collapsible Advanced Settings */}
+                                <div className="pt-2">
+                                    <button 
+                                        onClick={() => setShowAdvanced(!showAdvanced)}
+                                        className="flex items-center gap-1.5 text-sm font-medium text-gray-400 hover:text-brand-600 transition-colors py-2 ml-1"
+                                    >
+                                        <span>{showAdvanced ? '收起進階參數' : '進階參數設定 (選填)'}</span>
+                                        {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                    </button>
+                                    
+                                    {showAdvanced && (
+                                        <div className="mt-2 grid grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2">
+                                            {[
+                                                { label: '設計目的 (Design Goal)', val: designGoal, set: setDesignGoal, ph: '例：減少客服投訴、提升註冊轉換率...', fullWidth: true },
+                                                { label: '產品類型', val: productType, set: setProductType, ph: 'B2B SaaS, 電商...' },
+                                                { label: '目標族群', val: audience, set: setAudience, ph: '老年人, 專業人士...' },
+                                                { label: '操作平台', val: platform, set: setPlatform, ph: 'Mobile, Web...' },
+                                                { label: '特殊限制', val: constraints, set: setConstraints, ph: '弱網, 高資安...' },
+                                            ].map((field, idx) => (
+                                                <div key={idx} className={field.fullWidth ? 'col-span-2' : ''}>
+                                                    <label className="block text-sm font-medium text-neutral-500 mb-1 ml-1">
+                                                        {field.label}
+                                                    </label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={field.val}
+                                                        onChange={(e) => field.set(e.target.value)}
+                                                        placeholder={field.ph}
+                                                        className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition-all"
+                                                    />
+                                                </div>
                                             ))}
                                         </div>
-                                    </div>
+                                    )}
+                                </div>
 
-                                    {/* Quick Goal Input */}
-                                    <div className="space-y-1.5">
-                                        <label className="block text-sm font-bold text-brand-700 ml-1 flex items-center gap-1.5 uppercase tracking-wider">
-                                            <Target className="w-4 h-4" />
-                                            核心設計目的 (Design Goal)
-                                        </label>
-                                        <input 
-                                            type="text" 
-                                            value={designGoal}
-                                            onChange={(e) => setDesignGoal(e.target.value)}
-                                            placeholder="例：減少客服投訴、提升註冊轉換率..."
-                                            className="w-full px-4 py-3 text-sm rounded-xl border border-transparent bg-brand-50/50 hover:bg-brand-50 focus:bg-white focus:border-brand-300 focus:ring-4 focus:ring-brand-100 transition-all placeholder-brand-300/70 text-brand-900"
-                                        />
-                                    </div>
-
-                                    {/* Collapsible Advanced Settings */}
-                                    <div className="pt-1">
-                                        <button 
-                                            onClick={() => setShowAdvanced(!showAdvanced)}
-                                            className="flex items-center justify-start gap-1 w-full text-sm text-gray-400 hover:text-brand-600 transition-colors py-2 opacity-70 hover:opacity-100 ml-1"
-                                        >
-                                            <span>{showAdvanced ? '收起進階參數' : '進階參數設定 (選填)'}</span>
-                                            {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                        </button>
-                                        
-                                        {showAdvanced && (
-                                            <div className="mt-2 grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
-                                                {[
-                                                    { label: '產品類型', icon: Briefcase, val: productType, set: setProductType, ph: 'B2B SaaS, 電商...' },
-                                                    { label: '目標族群', icon: Users, val: audience, set: setAudience, ph: '老年人, 專業人士...' },
-                                                    { label: '操作平台', icon: Smartphone, val: platform, set: setPlatform, ph: 'Mobile, Web...' },
-                                                    { label: '特殊限制', icon: ShieldAlert, val: constraints, set: setConstraints, ph: '弱網, 高資安...' },
-                                                ].map((field, idx) => (
-                                                    <div key={idx}>
-                                                        <label className="block text-sm font-medium text-neutral-500 mb-1 flex items-center gap-1 ml-1">
-                                                            <field.icon className="w-4 h-4" /> {field.label}
-                                                        </label>
-                                                        <input 
-                                                            type="text" 
-                                                            value={field.val}
-                                                            onChange={(e) => field.set(e.target.value)}
-                                                            placeholder={field.ph}
-                                                            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition-all"
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Primary Action Button */}
-                                    <div className="pt-2">
-                                        <button
+                                {/* Primary Action Button */}
+                                <div className="pt-2">
+                                    <button
                                             onClick={generateFlows}
                                             disabled={loading || (!input.trim() && !image)}
                                             className={`
@@ -829,7 +848,7 @@
 
                     {/* VIEW: RESULT (Design Report) */}
                     {view === 'result' && result && (
-                        <div className="w-full min-h-screen bg-neutral-50 animate-in slide-in-from-right-8 duration-300">
+                        <div className="w-full min-h-screen bg-white animate-in slide-in-from-right-8 duration-300">
                             
                             {/* Sticky Navbar */}
                             <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
@@ -843,10 +862,7 @@
                                             <span>返回查詢</span>
                                         </button>
                                         <div className="h-5 w-px bg-gray-300"></div>
-                                        <h2 className="text-lg font-bold text-neutral-900 flex items-center gap-2">
-                                            <div className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                                                <CheckCircle className="w-3.5 h-3.5" />
-                                            </div>
+                                        <h2 className="text-lg font-bold text-neutral-900">
                                             設計分析報告
                                         </h2>
                                     </div>
@@ -888,8 +904,8 @@
                                     
                                     {activeTab === 'details' && (
                                         <div className="space-y-6">
-                                            {/* Sub Tabs Navigation (Progress) */}
-                                            <div className="flex flex-wrap gap-2 pb-4 border-b border-gray-200">
+                                            {/* Sub Tabs Navigation (Progress) - Changed to Underline Tabs style */}
+                                            <div className="flex flex-nowrap overflow-x-auto gap-8 border-b border-gray-200 no-scrollbar">
                                                 {detailTabs.map((tab) => {
                                                     const isActive = activeDetailTab === tab.id;
                                                     return (
@@ -897,14 +913,14 @@
                                                             key={tab.id}
                                                             onClick={() => setActiveDetailTab(tab.id)}
                                                             className={`
-                                                                relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
+                                                                group flex items-center gap-2 px-1 py-4 text-sm font-medium transition-all border-b-2 whitespace-nowrap
                                                                 ${isActive 
-                                                                    ? `${tab.bgActive} ${tab.textActive} ring-1 ring-inset ${tab.textActive.replace('text', 'ring')} shadow-sm`
-                                                                    : `bg-white text-gray-400 hover:bg-gray-50 hover:text-gray-600 border border-transparent`
+                                                                    ? `${tab.borderActive} ${tab.textActive}`
+                                                                    : `border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300`
                                                                 }
                                                             `}
                                                         >
-                                                            <tab.icon className={`w-4 h-4 ${isActive ? 'currentColor' : tab.iconColor}`} />
+                                                            <tab.icon className={`w-4 h-4 ${isActive ? 'currentColor' : 'text-gray-400 group-hover:text-gray-500'}`} />
                                                             {tab.label}
                                                         </button>
                                                     )
@@ -935,8 +951,22 @@
                                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                                             <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50/50">
                                                 <div className="flex items-center gap-2 pl-2">
-                                                    <h3 className="text-sm font-bold text-neutral-600">Mermaid Code</h3>
+                                                    <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+                                                        <button 
+                                                            onClick={() => setShowDiagram(true)}
+                                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${showDiagram ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                                        >
+                                                            <Image className="w-4 h-4"/> 預覽圖表
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => setShowDiagram(false)}
+                                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${!showDiagram ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                                        >
+                                                            <CodeIcon className="w-4 h-4"/> 原始碼
+                                                        </button>
+                                                    </div>
                                                 </div>
+                                                
                                                 <div className="flex items-center gap-2">
                                                     <a 
                                                         href={getMermaidLiveUrl(result.user_flow_mermaid)}
@@ -957,10 +987,17 @@
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div className="bg-gray-50 p-0 overflow-hidden">
-                                                <pre className="font-mono text-sm text-gray-600 w-full overflow-auto p-6 bg-gray-50/50 min-h-[300px]">
-                                                    {result.user_flow_mermaid}
-                                                </pre>
+                                            
+                                            <div className="bg-white min-h-[400px]">
+                                                {showDiagram ? (
+                                                     <MermaidDiagram code={result.user_flow_mermaid} />
+                                                ) : (
+                                                    <div className="bg-gray-50 p-0 overflow-hidden h-full">
+                                                        <pre className="font-mono text-sm text-gray-600 w-full overflow-auto p-6 bg-gray-50/50 min-h-[300px]">
+                                                            {result.user_flow_mermaid}
+                                                        </pre>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -983,7 +1020,7 @@
 
                     {/* Error Toast */}
                     {error && (
-                        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-red-50 text-red-600 px-6 py-3 rounded-full shadow-lg border border-red-100 flex items-center gap-3 animate-in slide-in-from-bottom-4">
+                        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-red-50 text-red-600 px-6 py-3 rounded-full shadow-lg border border-red-100 flex items-center gap-3 animate-in slide-in-from-bottom-4 z-50">
                             <AlertTriangle className="w-5 h-5" />
                             {error}
                         </div>

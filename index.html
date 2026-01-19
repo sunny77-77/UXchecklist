@@ -36,6 +36,7 @@
                     animation: {
                         'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                         'in': 'fadeIn 0.3s ease-out',
+                        'slide-in-right': 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                     },
                     keyframes: {
                         fadeInUp: {
@@ -45,6 +46,10 @@
                         fadeIn: {
                             'from': { opacity: '0' },
                             'to': { opacity: '1' },
+                        },
+                        slideInRight: {
+                            'from': { transform: 'translateX(100%)' },
+                            'to': { transform: 'translateX(0)' },
                         }
                     }
                 }
@@ -91,8 +96,8 @@
         const { useState, useEffect, useRef } = React;
         
         // --- Icons Components (SVG) - Minimalist Line Style ---
-        const IconBase = ({ children, className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        const IconBase = ({ children, className, onClick }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} onClick={onClick}>
                 {children}
             </svg>
         );
@@ -127,9 +132,6 @@
         const RefreshCw = ({ className }) => (
             <IconBase className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></IconBase>
         );
-        const GitGraph = ({ className }) => (
-            <IconBase className={className}><circle cx="5" cy="6" r="3"/><path d="M5 9v6"/><circle cx="5" cy="18" r="3"/><path d="M12 3v18"/><circle cx="19" cy="6" r="3"/><path d="M16 15.7A9 9 0 0 0 19 9"/></IconBase>
-        );
         const Globe = ({ className }) => (
             <IconBase className={className}><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></IconBase>
         );
@@ -154,21 +156,58 @@
         const Network = ({ className }) => (
             <IconBase className={className}><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></IconBase>
         );
-        const ListChecks = ({ className }) => (
-            <IconBase className={className}><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></IconBase>
+        const ExternalLink = ({ className }) => (
+            <IconBase className={className}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></IconBase>
         );
-        const X = ({ className }) => (
-            <IconBase className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>
+        const X = ({ className, onClick }) => (
+            <IconBase className={className} onClick={onClick}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>
         );
         const ImageIcon = ({ className }) => (
             <IconBase className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></IconBase>
         );
+        const ArrowLeft = ({ className }) => (
+            <IconBase className={className}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></IconBase>
+        );
         const Target = ({ className }) => (
             <IconBase className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></IconBase>
         );
+        // History Icons
+        const HistoryIcon = ({ className }) => (
+            <IconBase className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></IconBase>
+        );
+        const Trash2 = ({ className }) => (
+            <IconBase className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>
+        );
+        const Clock = ({ className }) => (
+             <IconBase className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconBase>
+        );
+
+
+        // --- Helper Function for JSON Parsing ---
+        const parseGeminiResponse = (text) => {
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                const firstBrace = text.indexOf('{');
+                const lastBrace = text.lastIndexOf('}');
+                
+                if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                    const jsonString = text.substring(firstBrace, lastBrace + 1);
+                    try {
+                        return JSON.parse(jsonString);
+                    } catch (e2) {
+                        console.error("Failed to parse extracted JSON:", e2);
+                        throw e;
+                    }
+                } else {
+                    throw e;
+                }
+            }
+        };
 
         // --- Main Component ---
         function UXFlowMaster() {
+            const [view, setView] = useState('home'); // 'home' | 'result'
             const [input, setInput] = useState('');
             const [loading, setLoading] = useState(false);
             const [result, setResult] = useState(null);
@@ -176,9 +215,8 @@
             const [copied, setCopied] = useState(false);
             const [mermaidCopied, setMermaidCopied] = useState(false);
             const [checkedItems, setCheckedItems] = useState({});
-            const [diagramView, setDiagramView] = useState('preview');
             const [activeTab, setActiveTab] = useState('details');
-            const [activeDetailTab, setActiveDetailTab] = useState('happy_path'); // New state for Detail Sub-tabs
+            const [activeDetailTab, setActiveDetailTab] = useState('happy_path'); 
             
             // Advanced Settings State
             const [showAdvanced, setShowAdvanced] = useState(false);
@@ -193,14 +231,29 @@
             const [isDragging, setIsDragging] = useState(false);
             const fileInputRef = useRef(null);
             
+            // History State
+            const [history, setHistory] = useState([]);
+            const [showHistory, setShowHistory] = useState(false);
+
+            // Load history from local storage on mount
+            useEffect(() => {
+                const savedHistory = localStorage.getItem('ux_flow_history');
+                if (savedHistory) {
+                    try {
+                        setHistory(JSON.parse(savedHistory));
+                    } catch (e) {
+                        console.error("Failed to parse history", e);
+                    }
+                }
+            }, []);
+
             useEffect(() => {
                 if (result) {
                     setCheckedItems({});
-                    setDiagramView('preview');
                     setActiveTab('details');
-                    setActiveDetailTab('happy_path'); // Reset to first sub-tab
-                    // Scroll to result
-                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                    setActiveDetailTab('happy_path'); 
+                    setView('result'); // Switch to result view
+                    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top
                 }
             }, [result]);
 
@@ -209,6 +262,59 @@
                     ...prev,
                     [id]: !prev[id]
                 }));
+            };
+
+            // --- History Functions ---
+            const saveToHistory = (newResult, params) => {
+                const newItem = {
+                    id: Date.now(),
+                    timestamp: new Date().toISOString(),
+                    result: newResult,
+                    params: {
+                        input: params.input,
+                        audience: params.audience,
+                        platform: params.platform,
+                        constraints: params.constraints,
+                        productType: params.productType,
+                        designGoal: params.designGoal,
+                        // Note: deliberately NOT saving the base64 image to history to prevent LocalStorage quota overflow
+                        hasImage: !!params.image 
+                    }
+                };
+
+                const updatedHistory = [newItem, ...history].slice(0, 20); // Keep last 20 items
+                setHistory(updatedHistory);
+                localStorage.setItem('ux_flow_history', JSON.stringify(updatedHistory));
+            };
+
+            const loadHistoryItem = (item) => {
+                const { params, result } = item;
+                setInput(params.input || '');
+                setAudience(params.audience || '');
+                setPlatform(params.platform || '');
+                setConstraints(params.constraints || '');
+                setProductType(params.productType || '');
+                setDesignGoal(params.designGoal || '');
+                setImage(null); // Clear image as we don't store it
+                
+                setResult(result);
+                // useEffect will handle view switch to 'result'
+                setShowHistory(false);
+                setShowAdvanced(true); // Open advanced settings to show loaded params
+            };
+
+            const deleteHistoryItem = (e, id) => {
+                e.stopPropagation();
+                const updatedHistory = history.filter(item => item.id !== id);
+                setHistory(updatedHistory);
+                localStorage.setItem('ux_flow_history', JSON.stringify(updatedHistory));
+            };
+
+            const clearHistory = () => {
+                if(confirm("確定要清空所有歷史紀錄嗎？")) {
+                    setHistory([]);
+                    localStorage.removeItem('ux_flow_history');
+                }
             };
 
             // --- Image Handling Functions ---
@@ -261,6 +367,13 @@
                 if (fileInputRef.current) fileInputRef.current.value = '';
             };
 
+            const handleBackToHome = () => {
+                setView('home');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Note: We keep the input state so user can modify it. 
+                // If they want to clear, they can delete the text manually.
+            };
+
             const generateFlows = async () => {
                 if (!input.trim() && !image) return;
                 setLoading(true);
@@ -306,7 +419,8 @@
                         6. competitor_references: 競品參考 (Competitor References)
                         7. user_flow_mermaid: 一個完整的 Mermaid.js flowchart 字串。
                         
-                        請以嚴格的 JSON 格式回傳。確保回應只包含 JSON，不要有其他 markdown 標記。
+                        請以嚴格的 JSON 格式回傳，不要使用 markdown code block，不要有任何註釋。
+                        Response MUST be valid JSON string only.
                         {
                           "happy_path": [{ "id": "h1", "title": "標題", "desc": "詳細描述" }],
                           "negative_path": [{ "id": "n1", "title": "標題", "desc": "詳細描述" }],
@@ -348,12 +462,18 @@
 
                     const data = await response.json();
                     const text = data.candidates[0].content.parts[0].text;
-                    const cleanJson = text.replace(/```json|```/g, '').trim();
-                    const parsedData = JSON.parse(cleanJson);
+                    
+                    const parsedData = parseGeminiResponse(text);
                     setResult(parsedData);
+                    
+                    // Save to history upon success
+                    saveToHistory(parsedData, {
+                        input, audience, platform, constraints, productType, designGoal, image
+                    });
+
                 } catch (err) {
                     console.error(err);
-                    setError('生成失敗，請稍後再試。' + err.message);
+                    setError('生成失敗，請稍後再試。錯誤訊息: ' + err.message);
                 } finally {
                     setLoading(false);
                 }
@@ -390,7 +510,6 @@
                     text += `\n🌊 User Flow (Mermaid):\n\`\`\`mermaid\n${result.user_flow_mermaid}\n\`\`\``;
                 }
 
-                // Fallback for clipboard copy if navigator.clipboard is unreliable in iframe
                 const el = document.createElement('textarea');
                 el.value = text;
                 document.body.appendChild(el);
@@ -417,17 +536,24 @@
                     setMermaidCopied(true);
                     setTimeout(() => setMermaidCopied(false), 2000);
                 } catch (err) {
-                     console.error('Fallback copy failed', err);
+                      console.error('Fallback copy failed', err);
                 }
                 document.body.removeChild(el);
             };
 
-            const getMermaidImageUrl = (code) => {
+            const getMermaidLiveUrl = (code) => {
                 try {
-                    const base64 = window.btoa(unescape(encodeURIComponent(code)));
-                    return `https://mermaid.ink/img/${base64}?bgColor=FFFFFF`;
+                    const state = {
+                      code: code,
+                      mermaid: { "theme": "default" },
+                      autoSync: true,
+                      updateDiagram: true
+                    };
+                    const json = JSON.stringify(state);
+                    const base64 = window.btoa(unescape(encodeURIComponent(json)));
+                    return `https://mermaid.live/edit#base64:${base64}`;
                 } catch (e) {
-                    return "";
+                    return "#";
                 }
             };
 
@@ -441,199 +567,317 @@
             ];
 
             return (
-                <div className="min-h-screen font-sans flex flex-col items-center">
+                <div className="min-h-screen font-sans flex flex-col items-center relative overflow-x-hidden bg-neutral-50">
                     
-                    {/* Centered Single Column Layout */}
-                    <div className="w-full max-w-3xl mx-auto p-6 md:p-12 min-h-[90vh] flex flex-col justify-center items-center">
-                        
-                        <div className="w-full flex flex-col justify-center space-y-8 animate-fade-in-up">
-                            
-                            {/* Branding Header */}
-                            <div className="flex flex-col gap-2 items-center text-center">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-200">
-                                        <LayoutTemplate className="w-7 h-7 text-white" />
-                                    </div>
-                                    <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">UX Flow Master</h1>
-                                </div>
-                                <p className="text-neutral-500 text-base leading-relaxed max-w-lg">
-                                    專為設計師打造的智能檢查器。<br/>輸入需求或貼上截圖，瞬間補全遺漏的 UX 狀態。
-                                </p>
-                            </div>
+                    {/* Top Right Buttons - Only visible on Home */}
+                    {view === 'home' && (
+                        <div className="fixed top-6 right-6 z-30 flex gap-2">
+                             <button 
+                                onClick={() => setShowHistory(true)}
+                                className="bg-white p-2.5 rounded-xl shadow-md border border-gray-100 text-gray-500 hover:text-brand-600 hover:border-brand-200 transition-all group relative"
+                                title="歷史紀錄"
+                            >
+                                <HistoryIcon className="w-5 h-5" />
+                                {history.length > 0 && (
+                                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-3 w-3 bg-brand-500"></span>
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+                    )}
 
-                            {/* Main Input Card - Enhanced Visuals */}
-                            <div className="bg-white border border-gray-100 shadow-xl shadow-brand-50/50 rounded-3xl p-8 space-y-6 w-full">
+                    {/* Sidebar / Drawer */}
+                    {showHistory && (
+                        <div className="fixed inset-0 z-50 flex justify-end">
+                            {/* Backdrop */}
+                            <div className="absolute inset-0 bg-black/20 backdrop-blur-sm animate-in fade-in" onClick={() => setShowHistory(false)}></div>
+                            
+                            {/* Drawer Content */}
+                            <div className="relative w-full max-w-sm bg-white h-full shadow-2xl flex flex-col animate-slide-in-right">
+                                <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                    <div className="flex items-center gap-2">
+                                        <HistoryIcon className="w-5 h-5 text-brand-600" />
+                                        <h3 className="font-bold text-lg text-gray-800">歷史紀錄</h3>
+                                        <span className="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">{history.length}</span>
+                                    </div>
+                                    <button onClick={() => setShowHistory(false)} className="p-1 hover:bg-gray-200 rounded-lg text-gray-500">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
                                 
-                                {/* Main Input Area */}
-                                <div className="space-y-3">
-                                    <label className="block text-sm font-bold text-neutral-800 ml-1">
-                                        你想繪製什麼功能流程？
-                                    </label>
-                                    <div 
-                                        className={`relative group rounded-xl transition-all duration-300 ${
-                                            isDragging 
-                                            ? 'bg-brand-50 border-2 border-brand-500' 
-                                            : 'bg-white border border-gray-200 shadow-sm hover:border-brand-300 focus-within:border-brand-600 focus-within:ring-4 focus-within:ring-brand-100'
-                                        }`}
-                                        onDragOver={handleDragOver}
-                                        onDragLeave={handleDragLeave}
-                                        onDrop={handleDrop}
-                                        onPaste={handlePaste}
-                                    >
-                                        <textarea
-                                            value={input}
-                                            onChange={(e) => setInput(e.target.value)}
-                                            placeholder="例：綁定手機號碼流程... (支援 Ctrl+V 貼上截圖)"
-                                            className="w-full p-4 pr-4 rounded-xl border-none bg-transparent focus:ring-0 resize-none min-h-[160px] text-base placeholder-neutral-400"
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' && !e.shiftKey) {
-                                                    e.preventDefault();
-                                                    generateFlows();
-                                                }
-                                            }}
-                                        />
-                                        
-                                        {/* Image Preview & Actions */}
-                                        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                                            {image ? (
-                                                <div className="relative group/image">
-                                                    <img src={image} alt="Preview" className="h-12 w-auto rounded border border-gray-200 shadow-sm" />
-                                                    <button onClick={removeImage} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow hover:bg-red-600"><X className="w-3 h-3"/></button>
+                                <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                                    {history.length === 0 ? (
+                                        <div className="text-center py-10 text-gray-400">
+                                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                                                <HistoryIcon className="w-8 h-8 opacity-50" />
+                                            </div>
+                                            <p>尚無歷史紀錄</p>
+                                            <p className="text-xs mt-1 opacity-70">生成後的結果會自動儲存於此</p>
+                                        </div>
+                                    ) : (
+                                        history.map((item) => (
+                                            <div key={item.id} 
+                                                onClick={() => loadHistoryItem(item)}
+                                                className="group relative bg-white border border-gray-200 rounded-xl p-3 hover:border-brand-300 hover:shadow-md transition-all cursor-pointer"
+                                            >
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <span className="text-xs font-medium text-gray-400 flex items-center gap-1">
+                                                        <Clock className="w-3 h-3" />
+                                                        {new Date(item.timestamp).toLocaleString()}
+                                                    </span>
+                                                    <button 
+                                                        onClick={(e) => deleteHistoryItem(e, item.id)}
+                                                        className="text-gray-300 hover:text-red-500 p-1 -mr-1 -mt-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        title="刪除此紀錄"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
                                                 </div>
-                                            ) : (
-                                                <button 
-                                                    onClick={() => fileInputRef.current?.click()}
-                                                    className="p-2 text-neutral-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
-                                                    title="上傳圖片"
-                                                >
-                                                    <ImageIcon className="w-5 h-5" />
-                                                </button>
-                                            )}
-                                            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                                                <h4 className="font-medium text-gray-800 line-clamp-2 mb-1 group-hover:text-brand-700">
+                                                    {item.params.input || "(無標題輸入)"}
+                                                </h4>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {item.params.productType && <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">{item.params.productType}</span>}
+                                                    {item.params.hasImage && <span className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded flex items-center gap-0.5"><ImageIcon className="w-3 h-3"/> 附圖</span>}
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                {history.length > 0 && (
+                                    <div className="p-4 border-t border-gray-100 bg-gray-50/30">
+                                        <button 
+                                            onClick={clearHistory}
+                                            className="w-full py-2 flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 rounded-lg text-sm transition-colors"
+                                        >
+                                            <Trash2 className="w-4 h-4" /> 清空所有紀錄
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* VIEW: HOME (Input Form) */}
+                    {view === 'home' && (
+                        <div className="w-full max-w-3xl mx-auto p-6 md:p-12 min-h-[90vh] flex flex-col justify-center items-center animate-in fade-in zoom-in-95 duration-300">
+                            
+                            <div className="w-full flex flex-col justify-center space-y-8">
+                                
+                                {/* Branding Header */}
+                                <div className="flex flex-col gap-2 items-center text-center">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-200">
+                                            <LayoutTemplate className="w-7 h-7 text-white" />
+                                        </div>
+                                        <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">UX Flow Master</h1>
+                                    </div>
+                                    <p className="text-neutral-500 text-base leading-relaxed max-w-lg">
+                                        專為設計師打造的智能檢查器。<br/>輸入需求或貼上截圖，瞬間補全遺漏的 UX 狀態。
+                                    </p>
+                                </div>
+
+                                {/* Main Input Card */}
+                                <div className="bg-white border border-gray-100 shadow-xl shadow-brand-50/50 rounded-3xl p-8 space-y-6 w-full">
+                                    
+                                    {/* Main Input Area */}
+                                    <div className="space-y-3">
+                                        <label className="block text-sm font-bold text-neutral-800 ml-1">
+                                            你想繪製什麼功能流程？
+                                        </label>
+                                        <div 
+                                            className={`relative group rounded-xl transition-all duration-300 ${
+                                                isDragging 
+                                                ? 'bg-brand-50 border-2 border-brand-500' 
+                                                : 'bg-white border border-gray-200 shadow-sm hover:border-brand-300 focus-within:border-brand-600 focus-within:ring-4 focus-within:ring-brand-100'
+                                            }`}
+                                            onDragOver={handleDragOver}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={handleDrop}
+                                            onPaste={handlePaste}
+                                        >
+                                            <textarea
+                                                value={input}
+                                                onChange={(e) => setInput(e.target.value)}
+                                                placeholder="例：綁定手機號碼流程... (支援 Ctrl+V 貼上截圖)"
+                                                className="w-full p-4 pb-14 rounded-xl border-none bg-transparent focus:ring-0 resize-none min-h-[160px] text-base placeholder-neutral-400"
+                                                onKeyDown={(e) => {
+                                                    // Change to Cmd/Ctrl + Enter for submit, allowing Enter for new lines
+                                                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                                                        e.preventDefault();
+                                                        generateFlows();
+                                                    }
+                                                }}
+                                            />
                                             
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-xs text-neutral-400 hidden md:inline">Cmd + Enter</span>
-                                                <button
-                                                    onClick={generateFlows}
-                                                    disabled={loading || (!input.trim() && !image)}
-                                                    className={`p-2 rounded-lg transition-all duration-300 ${
-                                                        loading || (!input.trim() && !image)
-                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                        : 'bg-brand-600 text-white shadow-md shadow-brand-200 hover:bg-brand-700 hover:shadow-lg hover:-translate-y-0.5'
-                                                    }`}
-                                                >
-                                                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-                                                </button>
+                                            {/* Image Preview & Actions */}
+                                            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                                                <div className="pointer-events-auto">
+                                                    {image ? (
+                                                        <div className="relative group/image">
+                                                            <img src={image} alt="Preview" className="h-12 w-auto rounded border border-gray-200 shadow-sm" />
+                                                            <button onClick={removeImage} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow hover:bg-red-600"><X className="w-3 h-3"/></button>
+                                                        </div>
+                                                    ) : (
+                                                        <button 
+                                                            onClick={() => fileInputRef.current?.click()}
+                                                            className="p-2 text-neutral-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
+                                                            title="上傳圖片"
+                                                        >
+                                                            <ImageIcon className="w-5 h-5" />
+                                                        </button>
+                                                    )}
+                                                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Suggestion Chips - Moved Here */}
-                                    <div className="flex flex-wrap gap-2 items-center">
-                                        <span className="text-xs font-medium text-neutral-400 pl-1">試試看：</span>
-                                        {['綁定手機號碼', '重設密碼流程', '購物車結帳', '個人資料編輯'].map(chip => (
-                                            <button 
-                                                key={chip}
-                                                onClick={() => setInput(chip)}
-                                                className="px-3 py-1 text-xs bg-gray-50 border border-gray-100 rounded-full text-neutral-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all"
-                                            >
-                                                {chip}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Quick Goal Input */}
-                                <div className="space-y-1.5">
-                                    <label className="block text-xs font-bold text-brand-700 ml-1 flex items-center gap-1.5 uppercase tracking-wider">
-                                        <Target className="w-3.5 h-3.5" />
-                                        核心設計目的 (Design Goal)
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        value={designGoal}
-                                        onChange={(e) => setDesignGoal(e.target.value)}
-                                        placeholder="例：減少客服投訴、提升註冊轉換率..."
-                                        className="w-full px-4 py-3 text-sm rounded-xl border border-transparent bg-brand-50/50 hover:bg-brand-50 focus:bg-white focus:border-brand-300 focus:ring-4 focus:ring-brand-100 transition-all placeholder-brand-300/70 text-brand-900"
-                                    />
-                                </div>
-
-                                {/* Collapsible Advanced Settings */}
-                                <div className="border-t border-gray-100 pt-2">
-                                    <button 
-                                        onClick={() => setShowAdvanced(!showAdvanced)}
-                                        className="flex items-center gap-2 text-xs text-neutral-400 hover:text-brand-600 transition-colors font-medium w-full justify-center py-2"
-                                    >
-                                        {showAdvanced ? '收起進階參數' : '展開進階參數 (選填)'}
-                                        {showAdvanced ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                    </button>
-                                    
-                                    {showAdvanced && (
-                                        <div className="mt-2 grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
-                                            {[
-                                                { label: '產品類型', icon: Briefcase, val: productType, set: setProductType, ph: 'B2B SaaS, 電商...' },
-                                                { label: '目標族群', icon: Users, val: audience, set: setAudience, ph: '老年人, 專業人士...' },
-                                                { label: '操作平台', icon: Smartphone, val: platform, set: setPlatform, ph: 'Mobile, Web...' },
-                                                { label: '特殊限制', icon: ShieldAlert, val: constraints, set: setConstraints, ph: '弱網, 高資安...' },
-                                            ].map((field, idx) => (
-                                                <div key={idx}>
-                                                    <label className="block text-xs font-medium text-neutral-500 mb-1 flex items-center gap-1 ml-1">
-                                                        <field.icon className="w-3 h-3" /> {field.label}
-                                                    </label>
-                                                    <input 
-                                                        type="text" 
-                                                        value={field.val}
-                                                        onChange={(e) => field.set(e.target.value)}
-                                                        placeholder={field.ph}
-                                                        className="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition-all"
-                                                    />
-                                                </div>
+                                        {/* Suggestion Chips */}
+                                        <div className="flex flex-wrap gap-2 items-center">
+                                            {['綁定手機號碼', '重設密碼流程', '購物車結帳', '個人資料編輯'].map(chip => (
+                                                <button 
+                                                    key={chip}
+                                                    onClick={() => setInput(chip)}
+                                                    className="px-3 py-1 text-sm bg-gray-50 border border-gray-100 rounded-full text-neutral-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all"
+                                                >
+                                                    {chip}
+                                                </button>
                                             ))}
                                         </div>
-                                    )}
+                                    </div>
+
+                                    {/* Quick Goal Input */}
+                                    <div className="space-y-1.5">
+                                        <label className="block text-sm font-bold text-brand-700 ml-1 flex items-center gap-1.5 uppercase tracking-wider">
+                                            <Target className="w-4 h-4" />
+                                            核心設計目的 (Design Goal)
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            value={designGoal}
+                                            onChange={(e) => setDesignGoal(e.target.value)}
+                                            placeholder="例：減少客服投訴、提升註冊轉換率..."
+                                            className="w-full px-4 py-3 text-sm rounded-xl border border-transparent bg-brand-50/50 hover:bg-brand-50 focus:bg-white focus:border-brand-300 focus:ring-4 focus:ring-brand-100 transition-all placeholder-brand-300/70 text-brand-900"
+                                        />
+                                    </div>
+
+                                    {/* Collapsible Advanced Settings */}
+                                    <div className="pt-1">
+                                        <button 
+                                            onClick={() => setShowAdvanced(!showAdvanced)}
+                                            className="flex items-center justify-start gap-1 w-full text-sm text-gray-400 hover:text-brand-600 transition-colors py-2 opacity-70 hover:opacity-100 ml-1"
+                                        >
+                                            <span>{showAdvanced ? '收起進階參數' : '進階參數設定 (選填)'}</span>
+                                            {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                        </button>
+                                        
+                                        {showAdvanced && (
+                                            <div className="mt-2 grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                                                {[
+                                                    { label: '產品類型', icon: Briefcase, val: productType, set: setProductType, ph: 'B2B SaaS, 電商...' },
+                                                    { label: '目標族群', icon: Users, val: audience, set: setAudience, ph: '老年人, 專業人士...' },
+                                                    { label: '操作平台', icon: Smartphone, val: platform, set: setPlatform, ph: 'Mobile, Web...' },
+                                                    { label: '特殊限制', icon: ShieldAlert, val: constraints, set: setConstraints, ph: '弱網, 高資安...' },
+                                                ].map((field, idx) => (
+                                                    <div key={idx}>
+                                                        <label className="block text-sm font-medium text-neutral-500 mb-1 flex items-center gap-1 ml-1">
+                                                            <field.icon className="w-4 h-4" /> {field.label}
+                                                        </label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={field.val}
+                                                            onChange={(e) => field.set(e.target.value)}
+                                                            placeholder={field.ph}
+                                                            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition-all"
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Primary Action Button */}
+                                    <div className="pt-2">
+                                        <button
+                                            onClick={generateFlows}
+                                            disabled={loading || (!input.trim() && !image)}
+                                            className={`
+                                                w-full py-4 rounded-xl flex items-center justify-center gap-3 font-bold text-lg transition-all duration-300
+                                                ${loading || (!input.trim() && !image)
+                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                    : 'bg-brand-600 text-white shadow-xl shadow-brand-200 hover:bg-brand-700 hover:shadow-2xl hover:-translate-y-1 active:translate-y-0'
+                                                }
+                                            `}
+                                        >
+                                            <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                                                {loading ? (
+                                                    <Loader2 className="w-full h-full animate-spin" />
+                                                ) : (
+                                                    <Sparkles className="w-full h-full overflow-visible" />
+                                                )}
+                                            </div>
+                                            <div>{loading ? '正在分析 UX 流程...' : '開始分析'}</div>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    )}
 
-                    {/* Result Overlay / Section (Scrolls into view) */}
-                    {result && (
-                        <div className="w-full bg-white border-t border-gray-100 min-h-screen py-16 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
-                            <div className="max-w-6xl mx-auto px-6">
-                                {/* Action Bar */}
-                                <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                                    <h2 className="text-2xl font-bold text-neutral-900 flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                                            <CheckCircle className="w-5 h-5" />
-                                        </div>
-                                        設計分析報告
-                                    </h2>
+                    {/* VIEW: RESULT (Design Report) */}
+                    {view === 'result' && result && (
+                        <div className="w-full min-h-screen bg-neutral-50 animate-in slide-in-from-right-8 duration-300">
+                            
+                            {/* Sticky Navbar */}
+                            <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
+                                <div className="max-w-6xl mx-auto flex justify-between items-center">
+                                    <div className="flex items-center gap-4">
+                                        <button 
+                                            onClick={handleBackToHome}
+                                            className="flex items-center gap-1 text-neutral-600 hover:text-brand-600 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-all font-medium"
+                                        >
+                                            <ArrowLeft className="w-4 h-4" />
+                                            <span>返回查詢</span>
+                                        </button>
+                                        <div className="h-5 w-px bg-gray-300"></div>
+                                        <h2 className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                                <CheckCircle className="w-3.5 h-3.5" />
+                                            </div>
+                                            設計分析報告
+                                        </h2>
+                                    </div>
+
                                     <button
                                         onClick={copyToClipboard}
-                                        className="flex items-center gap-2 text-sm font-medium px-5 py-2.5 bg-white border border-gray-200 rounded-xl hover:border-brand-300 hover:text-brand-600 hover:shadow-md transition-all"
+                                        className="flex items-center gap-2 text-sm font-medium px-4 py-2 bg-white border border-gray-200 rounded-lg hover:border-brand-300 hover:text-brand-600 hover:shadow-sm transition-all"
                                     >
                                         {copied ? <Check className="w-4 h-4" /> : <Clipboard className="w-4 h-4" />}
-                                        {copied ? '已複製報告' : '複製完整報告'}
+                                        {copied ? '已複製' : '複製報告'}
                                     </button>
                                 </div>
+                            </div>
 
+                            <div className="max-w-6xl mx-auto px-6 py-8">
                                 {/* Tabs */}
-                                <div className="bg-gray-50 p-1 rounded-xl shadow-inner inline-flex mb-8 border border-gray-200/50">
+                                <div className="bg-gray-100/50 p-1 rounded-xl inline-flex mb-8 border border-gray-200">
                                     {[
-                                        { id: 'details', label: '流程細節', icon: ListChecks },
-                                        { id: 'userflow', label: 'User Flow', icon: GitGraph },
-                                        { id: 'references', label: '競品參考', icon: Globe }
+                                        { id: 'details', label: '流程細節' },
+                                        { id: 'userflow', label: 'User Flow' },
+                                        { id: 'references', label: '競品參考' }
                                     ].map(tab => (
                                         <button
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
-                                            className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                                            className={`flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg transition-all ${
                                                 activeTab === tab.id 
                                                 ? 'bg-white text-brand-700 shadow-sm ring-1 ring-black/5' 
-                                                : 'text-neutral-500 hover:text-neutral-900 hover:bg-gray-100/50'
+                                                : 'text-neutral-500 hover:text-neutral-900 hover:bg-gray-200/50'
                                             }`}
                                         >
-                                            <tab.icon className="w-4 h-4" />
                                             {tab.label}
                                         </button>
                                     ))}
@@ -644,8 +888,8 @@
                                     
                                     {activeTab === 'details' && (
                                         <div className="space-y-6">
-                                            {/* Sub Tabs Navigation */}
-                                            <div className="flex flex-wrap gap-2 border-b border-gray-100 pb-4">
+                                            {/* Sub Tabs Navigation (Progress) */}
+                                            <div className="flex flex-wrap gap-2 pb-4 border-b border-gray-200">
                                                 {detailTabs.map((tab) => {
                                                     const isActive = activeDetailTab === tab.id;
                                                     return (
@@ -653,10 +897,10 @@
                                                             key={tab.id}
                                                             onClick={() => setActiveDetailTab(tab.id)}
                                                             className={`
-                                                                flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border
+                                                                relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
                                                                 ${isActive 
-                                                                    ? `${tab.bgActive} ${tab.textActive} ${tab.borderActive} shadow-sm ring-1 ring-opacity-20 ${tab.textActive.replace('text', 'ring')}`
-                                                                    : `bg-white text-gray-500 border-gray-200 hover:bg-gray-50 ${tab.bgHover}`
+                                                                    ? `${tab.bgActive} ${tab.textActive} ring-1 ring-inset ${tab.textActive.replace('text', 'ring')} shadow-sm`
+                                                                    : `bg-white text-gray-400 hover:bg-gray-50 hover:text-gray-600 border border-transparent`
                                                                 }
                                                             `}
                                                         >
@@ -668,16 +912,15 @@
                                             </div>
 
                                             {/* Content Area for Sub-tabs */}
-                                            <div className="min-h-[300px]">
+                                            <div className="min-h-[400px] flex flex-col">
                                                 {detailTabs.map(tab => {
                                                     if (activeDetailTab !== tab.id) return null;
                                                     return (
-                                                        <div key={tab.id} className="animate-in fade-in slide-in-from-left-4 duration-300">
+                                                        <div key={tab.id} className="animate-in fade-in slide-in-from-right-8 duration-300 flex-1">
                                                             <CategoryCard
                                                                 title={tab.fullLabel}
-                                                                icon={<tab.icon className={`w-5 h-5 ${tab.iconColor}`} />}
+                                                                icon={<tab.icon className={`w-6 h-6 ${tab.iconColor}`} />}
                                                                 items={result[tab.id]}
-                                                                colorClass={`border-t-4 ${tab.borderColor}`}
                                                                 checkedItems={checkedItems}
                                                                 toggleCheck={toggleCheck}
                                                             />
@@ -691,41 +934,33 @@
                                     {activeTab === 'userflow' && result.user_flow_mermaid && (
                                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                                             <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50/50">
-                                                <div className="flex bg-gray-200/50 p-1 rounded-lg">
-                                                    <button 
-                                                        onClick={() => setDiagramView('preview')}
-                                                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${diagramView === 'preview' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500'}`}
+                                                <div className="flex items-center gap-2 pl-2">
+                                                    <h3 className="text-sm font-bold text-neutral-600">Mermaid Code</h3>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <a 
+                                                        href={getMermaidLiveUrl(result.user_flow_mermaid)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-1.5 text-sm text-neutral-600 hover:text-brand-600 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-brand-200"
                                                     >
-                                                        預覽
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => setDiagramView('code')}
-                                                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${diagramView === 'code' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500'}`}
+                                                        <ExternalLink className="w-3.5 h-3.5" />
+                                                        前往 Mermaid Live
+                                                    </a>
+                                                    <div className="h-4 w-px bg-gray-300 mx-1"></div>
+                                                    <button
+                                                        onClick={copyMermaid}
+                                                        className="flex items-center gap-1.5 text-sm text-brand-600 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors"
                                                     >
-                                                        代碼
+                                                        {mermaidCopied ? <Check className="w-3.5 h-3.5" /> : <Clipboard className="w-3.5 h-3.5" />}
+                                                        {mermaidCopied ? '已複製' : '複製代碼'}
                                                     </button>
                                                 </div>
-                                                <button
-                                                    onClick={copyMermaid}
-                                                    className="flex items-center gap-1.5 text-xs text-brand-600 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors"
-                                                >
-                                                    {mermaidCopied ? <Check className="w-3.5 h-3.5" /> : <Clipboard className="w-3.5 h-3.5" />}
-                                                    {mermaidCopied ? '已複製' : '複製代碼'}
-                                                </button>
                                             </div>
-                                            <div className="min-h-[400px] flex items-center justify-center bg-white p-8">
-                                                {diagramView === 'preview' ? (
-                                                    <img 
-                                                        src={getMermaidImageUrl(result.user_flow_mermaid)} 
-                                                        alt="User Flow"
-                                                        className="max-w-full"
-                                                        onError={(e) => { e.target.style.display='none'; setDiagramView('code'); }}
-                                                    />
-                                                ) : (
-                                                    <pre className="font-mono text-xs text-gray-600 w-full overflow-auto p-4 bg-gray-50 rounded-lg border border-gray-100">
-                                                        {result.user_flow_mermaid}
-                                                    </pre>
-                                                )}
+                                            <div className="bg-gray-50 p-0 overflow-hidden">
+                                                <pre className="font-mono text-sm text-gray-600 w-full overflow-auto p-6 bg-gray-50/50 min-h-[300px]">
+                                                    {result.user_flow_mermaid}
+                                                </pre>
                                             </div>
                                         </div>
                                     )}
@@ -734,9 +969,8 @@
                                         <div className="grid grid-cols-1 gap-6">
                                             <CategoryCard 
                                                 title="競品參考 (Competitor References)" 
-                                                icon={<Globe className="w-5 h-5 text-indigo-500" />}
+                                                icon={<Globe className="w-6 h-6 text-indigo-500" />}
                                                 items={result.competitor_references} 
-                                                colorClass="border-t-4 border-t-indigo-400"
                                                 checkedItems={checkedItems}
                                                 toggleCheck={toggleCheck}
                                             />
@@ -758,44 +992,51 @@
             );
         }
 
-        function CategoryCard({ title, icon, items, colorClass, checkedItems, toggleCheck }) {
+        function CategoryCard({ title, icon, items, checkedItems, toggleCheck }) {
             if (!items || items.length === 0) return null;
 
             return (
-                <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow duration-300 ${colorClass}`}>
-                    <div className="p-5 border-b border-gray-50 flex items-center gap-3">
-                        <div className="p-2 bg-gray-50 rounded-lg text-neutral-700">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-full">
+                    {/* Header: Cleaner layout without heavy borders */}
+                    <div className="px-8 pt-8 pb-4 flex items-center gap-4">
+                        <div className="p-2.5 bg-gray-50 rounded-xl">
                             {icon}
                         </div>
-                        <h3 className="font-bold text-neutral-800">{title}</h3>
-                        <span className="ml-auto text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                        <div>
+                            <h3 className="text-xl font-bold text-neutral-900">{title}</h3>
+                        </div>
+                        <span className="ml-auto text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
                             {items.length} 項目
                         </span>
                     </div>
-                    <div className="p-4 flex-1 space-y-1">
+
+                    {/* Content List: More spacing, no background blocks */}
+                    <div className="px-8 pb-8 pt-2 space-y-6">
                         {items.map((item, idx) => {
                             const isChecked = checkedItems[item.id] || false;
                             return (
                                 <div 
                                     key={item.id || idx}
                                     onClick={() => toggleCheck(item.id)}
-                                    className={`
-                                        group flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all
-                                        ${isChecked ? 'bg-gray-50' : 'hover:bg-brand-50/50'}
-                                    `}
+                                    className="group flex items-start gap-4 cursor-pointer"
                                 >
+                                    {/* Custom Checkbox */}
                                     <div className={`
-                                        mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 transition-colors
-                                        ${isChecked ? 'bg-brand-500 border-brand-500' : 'border-gray-300 group-hover:border-brand-400'}
+                                        mt-1 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200
+                                        ${isChecked 
+                                            ? 'bg-neutral-800 border-neutral-800' 
+                                            : 'border-gray-300 bg-white group-hover:border-brand-500'
+                                        }
                                     `}>
                                         {isChecked && <Check className="w-3.5 h-3.5 text-white" />}
                                     </div>
                                     
-                                    <div className={`${isChecked ? 'opacity-40 line-through' : ''} transition-all duration-300`}>
-                                        <h4 className={`text-sm font-semibold mb-1 ${isChecked ? 'text-neutral-500' : 'text-neutral-800'}`}>
+                                    {/* Text Content */}
+                                    <div className={`flex-1 transition-all duration-300 ${isChecked ? 'opacity-40' : 'opacity-100'}`}>
+                                        <h4 className={`text-base font-bold mb-1.5 transition-colors ${isChecked ? 'text-neutral-500 line-through decoration-gray-300' : 'text-neutral-800 group-hover:text-brand-700'}`}>
                                             {item.title}
                                         </h4>
-                                        <p className={`text-xs leading-relaxed ${isChecked ? 'text-neutral-400' : 'text-neutral-500'}`}>
+                                        <p className="text-sm text-neutral-500 leading-relaxed">
                                             {item.desc}
                                         </p>
                                     </div>

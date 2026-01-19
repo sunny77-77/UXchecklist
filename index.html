@@ -126,7 +126,7 @@
 
         const LayoutTemplate = ({ className }) => (<IconBase className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="9" y2="21"/></IconBase>);
         const Loader2 = ({ className }) => (<IconBase className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></IconBase>);
-        const Sparkles = ({ className }) => (<IconBase className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></IconBase>);
+        const Sparkles = ({ className }) => (<IconBase className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></IconBase>);
         const AlertTriangle = ({ className }) => (<IconBase className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></IconBase>);
         const CheckCircle = ({ className }) => (<IconBase className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconBase>);
         const Clipboard = ({ className }) => (<IconBase className={className}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></IconBase>);
@@ -411,7 +411,7 @@
                         userQueryText += `\n附圖是我目前的介面設計草圖/截圖，請針對此畫面分析可能缺失的流程與狀態。`;
                     }
 
-                    userQueryText += `\n請列出 UI 流程與狀態 (理想、錯誤、極限、空白、載入)、跨頁面影響、推薦競品參考，並繪製 User Flow。`;
+                    userQueryText += `\n請列出 UI 流程與狀態 (理想、錯誤、極限、空白、載入)、跨頁面影響、推薦競品參考(請盡量多列幾項)，並繪製 User Flow。`;
 
                     const systemPrompt = `
                         你是一位資深的 UX/UI 設計師與產品經理專家。你的任務是幫助 UI 設計師找出特定功能的所有潛在狀態和流程。
@@ -435,15 +435,8 @@
                         3. edge_cases: 極限與邊界情況（Limit Cases）
                         4. system_states: 空白與載入狀態（Empty & Loading）
                         5. cross_page_impacts: 跨頁面與全局影響 (Cross-page Impacts)
-                        6. competitor_references: 競品參考 (Competitor References)
-                        7. user_flow_mermaid: 一個完整的 Mermaid.js flowchart 字串。
-                        
-                        **強制語法規則 (CRITICAL SYNTAX RULES):**
-                        1. **所有**節點標籤文字 **必須** 用雙引號包起來。
-                           - 錯誤: A(開始), B{是否成功?}, C(輸入 (Code)), D{輸入驗證碼 (6位數)}
-                           - 正確: A("開始"), B{"是否成功?"}, C["輸入 (Code)"], D{"輸入驗證碼 (6位數)"}
-                        2. 若文字內有雙引號，請轉為單引號。
-                        3. 這是為了避免括號 () 或 {} 造成 Parse Error。
+                        6. competitor_references: 競品參考 (Competitor References) - 請盡量列出 5 個以上相關競品或更多，不要只列 3 個。請提供具體的參考點。
+                        7. user_flow_mermaid: 一個完整的 Mermaid.js flowchart 字串。請嚴格遵守 Mermaid 語法：所有節點的文字標籤(Label)都必須使用雙引號包裹，例如 id["內容"]。若內容本身包含雙引號，請替換為單引號。請避免在標籤外使用特殊字元。
                         
                         請以嚴格的 JSON 格式回傳，不要使用 markdown code block，不要有任何註釋。
                         Response MUST be valid JSON string only.
@@ -1010,6 +1003,7 @@
                                                 items={result.competitor_references} 
                                                 checkedItems={checkedItems}
                                                 toggleCheck={toggleCheck}
+                                                noCheckbox={true}
                                             />
                                         </div>
                                     )}
@@ -1029,7 +1023,7 @@
             );
         }
 
-        function CategoryCard({ title, icon, items, checkedItems, toggleCheck }) {
+        function CategoryCard({ title, icon, items, checkedItems, toggleCheck, noCheckbox = false }) {
             if (!items || items.length === 0) return null;
 
             return (
@@ -1054,19 +1048,21 @@
                             return (
                                 <div 
                                     key={item.id || idx}
-                                    onClick={() => toggleCheck(item.id)}
-                                    className="group flex items-start gap-4 cursor-pointer"
+                                    onClick={() => !noCheckbox && toggleCheck(item.id)}
+                                    className={`group flex items-start gap-4 ${!noCheckbox ? 'cursor-pointer' : ''}`}
                                 >
                                     {/* Custom Checkbox */}
-                                    <div className={`
-                                        mt-1 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200
-                                        ${isChecked 
-                                            ? 'bg-neutral-800 border-neutral-800' 
-                                            : 'border-gray-300 bg-white group-hover:border-brand-500'
-                                        }
-                                    `}>
-                                        {isChecked && <Check className="w-3.5 h-3.5 text-white" />}
-                                    </div>
+                                    {!noCheckbox && (
+                                        <div className={`
+                                            mt-1 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200
+                                            ${isChecked 
+                                                ? 'bg-neutral-800 border-neutral-800' 
+                                                : 'border-gray-300 bg-white group-hover:border-brand-500'
+                                            }
+                                        `}>
+                                            {isChecked && <Check className="w-3.5 h-3.5 text-white" />}
+                                        </div>
+                                    )}
                                     
                                     {/* Text Content */}
                                     <div className={`flex-1 transition-all duration-300 ${isChecked ? 'opacity-40' : 'opacity-100'}`}>

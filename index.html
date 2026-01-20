@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UX Flow Master - 全方位流程檢查器</title>
+    <title>UX Flow Checklist - 全方位流程檢查器</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -112,7 +112,7 @@
         }
     </style>
 </head>
-<body class="bg-neutral-50 text-neutral-900 antialiased selection:bg-brand-200 selection:text-brand-900">
+<body class="bg-neutral-50 text-neutral-900 antialiased selection:bg-brand-200 selection:text-brand-900 text-base">
     <div id="root"></div>
 
     <script type="text/babel">
@@ -144,7 +144,7 @@
 
         const LayoutTemplate = ({ className }) => (<IconBase className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="9" y2="21"/></IconBase>);
         const Loader2 = ({ className }) => (<IconBase className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></IconBase>);
-        const Sparkles = ({ className }) => (<IconBase className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></IconBase>);
+        const Sparkles = ({ className }) => (<IconBase className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></IconBase>);
         const AlertTriangle = ({ className }) => (<IconBase className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></IconBase>);
         const CheckCircle = ({ className }) => (<IconBase className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconBase>);
         const Clipboard = ({ className }) => (<IconBase className={className}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></IconBase>);
@@ -200,12 +200,11 @@
         const fixCommonMermaidErrors = (code) => {
             if (!code) return code;
             let fixed = code;
-            // Attempt to wrap unquoted text in {} [] () with double quotes
-            // This regex looks for: ID + space + bracket + unquoted text + closing bracket
-            // It excludes text that already starts with "
-            fixed = fixed.replace(/([A-Za-z0-9_]+)(\s*\{)([^\n\"\}]+)(\})/g, '$1$2"$3"$4');
-            fixed = fixed.replace(/([A-Za-z0-9_]+)(\s*\()([^\n\"\)]+)(\))/g, '$1$2"$3"$4');
-            fixed = fixed.replace(/([A-Za-z0-9_]+)(\s*\[)([^\n\"\]]+)(\])/g, '$1$2"$3"$4');
+            // Enhanced Fixer: Aggressively quote content in {}, [], () if not quoted
+            fixed = fixed.replace(/([A-Za-z0-9_\-\.]+)(\s*\{)(?!\{)([^\"\}\n]+)(\})/g, '$1$2"$3"$4');
+            fixed = fixed.replace(/([A-Za-z0-9_\-\.]+)(\s*\()(?!\()([^\"\)\n]+)(\))/g, '$1$2"$3"$4');
+            fixed = fixed.replace(/([A-Za-z0-9_\-\.]+)(\s*\[)(?!\[)([^\"\]\n]+)(\])/g, '$1$2"$3"$4');
+
             return fixed;
         };
 
@@ -219,7 +218,6 @@
                     if (!code) return;
                     try {
                         setError(null);
-                        // Mermaid needs a unique ID
                         const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
                         const { svg } = await mermaid.render(id, code);
                         setSvg(svg);
@@ -252,16 +250,17 @@
             const [input, setInput] = useState('');
             const [loading, setLoading] = useState(false);
             const [result, setResult] = useState(null);
-            const [resultKey, setResultKey] = useState(0); // Add key to force remount
-            const [toast, setToast] = useState(null); // Toast state { message, type }
+            const [resultKey, setResultKey] = useState(0); 
+            const [toast, setToast] = useState(null); 
             const [copied, setCopied] = useState(false);
             const [mermaidCopied, setMermaidCopied] = useState(false);
             const [checkedItems, setCheckedItems] = useState({});
-            const [currentHistoryId, setCurrentHistoryId] = useState(null); // Track which history item is currently active
+            const [currentHistoryId, setCurrentHistoryId] = useState(null); 
             const [activeTab, setActiveTab] = useState('details');
-            const [activeDetailTab, setActiveDetailTab] = useState('happy_path'); 
-            const [showDiagram, setShowDiagram] = useState(true); // Toggle for diagram/code
-            const [showClearConfirm, setShowClearConfirm] = useState(false); // Confirmation modal state
+            const [activeDetailTab, setActiveDetailTab] = useState('happy_path'); // Only used for Legacy view
+            const [activeStepId, setActiveStepId] = useState(null); // New: For tracking active step tab
+            const [showDiagram, setShowDiagram] = useState(true); 
+            const [showClearConfirm, setShowClearConfirm] = useState(false); 
             
             // API Key State
             const [showApiModal, setShowApiModal] = useState(false);
@@ -284,7 +283,6 @@
             const [history, setHistory] = useState([]);
             const [showHistory, setShowHistory] = useState(false);
 
-            // Load history and API key from local storage on mount
             useEffect(() => {
                 const savedHistory = localStorage.getItem('ux_flow_history');
                 if (savedHistory) {
@@ -305,18 +303,43 @@
             const progressStats = useMemo(() => {
                 if (!result) return { total: 0, checked: 0, percent: 0 };
                 
-                const trackableCategories = ['happy_path', 'negative_path', 'edge_cases', 'system_states', 'cross_page_impacts'];
                 let total = 0;
                 let checked = 0;
-                
-                trackableCategories.forEach(key => {
-                    if (result[key] && Array.isArray(result[key])) {
-                        result[key].forEach(item => {
+
+                // Support new Structure (Steps)
+                if (result.steps) {
+                    // Added 'user_negative_flow' to tracking categories
+                    const categories = ['happy_path', 'negative_path', 'user_negative_flow', 'edge_cases', 'system_states'];
+                    result.steps.forEach(step => {
+                        categories.forEach(cat => {
+                            if (step[cat] && Array.isArray(step[cat])) {
+                                step[cat].forEach(item => {
+                                    total++;
+                                    if (checkedItems[item.id]) checked++;
+                                });
+                            }
+                        });
+                    });
+                     // Add cross page impacts to stats
+                    if(result.cross_page_impacts) {
+                        result.cross_page_impacts.forEach(item => {
                             total++;
                             if (checkedItems[item.id]) checked++;
                         });
                     }
-                });
+
+                } else {
+                    // Legacy Structure
+                    const trackableCategories = ['happy_path', 'negative_path', 'edge_cases', 'system_states', 'cross_page_impacts'];
+                    trackableCategories.forEach(key => {
+                        if (result[key] && Array.isArray(result[key])) {
+                            result[key].forEach(item => {
+                                total++;
+                                if (checkedItems[item.id]) checked++;
+                            });
+                        }
+                    });
+                }
                 
                 return { 
                     total, 
@@ -327,17 +350,18 @@
 
             useEffect(() => {
                 if (result) {
-                    // Only reset tabs and view if not loading from history state preservation
-                    // We don't reset checkedItems here anymore to support history loading
-                    if (Object.keys(checkedItems).length === 0 && !currentHistoryId) {
-                         // Likely a new generation, keep these defaults
-                    }
                     setActiveTab('details');
                     setActiveDetailTab('happy_path'); 
+                    
+                    // Initialize active step if steps exist
+                    if (result.steps && result.steps.length > 0) {
+                        setActiveStepId(result.steps[0].id);
+                    }
+
                     setShowDiagram(true);
-                    setResultKey(Date.now()); // Force remount for animation
-                    setView('result'); // Switch to result view
-                    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top
+                    setResultKey(Date.now()); 
+                    setView('result'); 
+                    window.scrollTo({ top: 0, behavior: 'smooth' }); 
                 }
             }, [result]);
 
@@ -359,7 +383,6 @@
                 };
                 setCheckedItems(newCheckedItems);
 
-                // Update history if we are currently viewing a history item
                 if (currentHistoryId) {
                     const updatedHistory = history.map(item => {
                         if (item.id === currentHistoryId) {
@@ -378,7 +401,7 @@
                     id: Date.now(),
                     timestamp: new Date().toISOString(),
                     result: newResult,
-                    checkedItems: {}, // Initialize empty checks
+                    checkedItems: {}, 
                     params: {
                         input: params.input,
                         audience: params.audience,
@@ -390,7 +413,7 @@
                     }
                 };
 
-                const updatedHistory = [newItem, ...history].slice(0, 20); // Keep last 20 items
+                const updatedHistory = [newItem, ...history].slice(0, 20); 
                 setHistory(updatedHistory);
                 localStorage.setItem('ux_flow_history', JSON.stringify(updatedHistory));
                 return newItem.id;
@@ -406,15 +429,16 @@
                 setDesignGoal(params.designGoal || '');
                 setImage(null); 
                 
-                // Important: Set state before switching view
                 setResult(savedResult);
                 setCheckedItems(savedCheckedItems || {});
                 setCurrentHistoryId(id);
                 
-                setShowHistory(false); // Close modal
-                
-                // Force page switch manually because useEffect might not trigger if result object reference is same (though it usually is different from localStorage parsing)
-                // But to be safe, we explicitly set view here, although useEffect handles it too.
+                // Initialize active step for history items too
+                if (savedResult.steps && savedResult.steps.length > 0) {
+                    setActiveStepId(savedResult.steps[0].id);
+                }
+
+                setShowHistory(false); 
                 setView('result'); 
                 setResultKey(Date.now());
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -426,7 +450,7 @@
                 setHistory(updatedHistory);
                 localStorage.setItem('ux_flow_history', JSON.stringify(updatedHistory));
                 if (currentHistoryId === id) {
-                    setCurrentHistoryId(null); // Clear current if deleted
+                    setCurrentHistoryId(null); 
                 }
             };
 
@@ -500,7 +524,6 @@
             const generateFlows = async () => {
                 if (!input.trim() && !image) return;
                 
-                // Check for API Key
                 const currentApiKey = userApiKey || defaultApiKey;
                 if (!currentApiKey) {
                     setShowApiModal(true);
@@ -509,7 +532,6 @@
                 }
 
                 setLoading(true);
-                // remove setError('') here, toast handles it
                 setResult(null);
 
                 try {
@@ -524,40 +546,48 @@
                         userQueryText += `\n附圖是我目前的介面設計草圖/截圖，請針對此畫面分析可能缺失的流程與狀態。`;
                     }
 
-                    userQueryText += `\n請列出 UI 流程與狀態 (理想、錯誤、極限、空白、載入)、跨頁面影響、推薦競品參考(請盡量多列幾項)，並繪製 User Flow。`;
+                    // Updated prompt request to include Negative User Flows
+                    userQueryText += `\n請改用「步驟導向」的方式分析。請將使用者操作流程**拆解得非常詳細**。請盡量列出 **8 到 15 個** 詳細步驟。每個步驟都要詳細列出：理想流程、錯誤狀態、消極操作(如返回/刪除/取消)、極限情況、系統狀態。`;
 
                     const systemPrompt = `
                         你是一位資深的 UX/UI 設計師與產品經理專家。你的任務是幫助 UI 設計師找出特定功能的所有潛在狀態和流程。
                         
-                        請針對使用者的輸入（包含功能描述、截圖、產品類型、目標族群、設計目的等），詳細列出所有必須考慮的畫面和狀態，並生成一個 Mermaid.js 流程圖。
+                        請將輸出結構調整為「依據操作流程步驟分類」。
+                        
+                        **關鍵指令：請務必將流程拆解得非常細緻**。
+                        不要只列出「填寫表單」這樣的大步驟，請將其拆解為：「進入畫面」、「點擊輸入框」、「輸入內容中」、「輸入完成/失去焦點」、「即時驗證回饋」、「點擊送出按鈕」等微互動。
+                        
+                        請盡量列出 **8 到 15 個步驟**，並在每個步驟下分別列出：
+                        1. happy_path (該步驟的理想狀態) - 至少 2-3 點
+                        2. negative_path (該步驟可能發生的錯誤/系統錯誤) - 至少 2-3 點
+                        3. user_negative_flow (使用者主動的消極操作) - 這是指使用者**反悔、取消、刪除、返回**等操作。例如：清空已輸入文字、點擊返回上一頁、取消對話框、關閉分頁。請務必思考使用者在此步驟可能做的「不做」或「倒退」行為。 - 至少 2-3 點
+                        4. edge_cases (該步驟的邊界條件) - 至少 2-3 點
+                        5. system_states (該步驟的系統回饋) - 至少 1-2 點
+
+                        另外將「跨頁面影響」與「競品參考」列為全域項目。
                         
                         **若使用者提供了圖片**：
                         1. 請仔細分析圖片中的元件（例如：按鈕、輸入框、導航列）。
                         2. 根據圖片內容，指出**視覺上缺失**或**邏輯上遺漏**的狀態。
                         3. 結合圖片與文字描述，提供完整的改善建議。
 
-                        重點策略：
-                        1. **設計目的**：若使用者提供了設計目的（例如提高轉換率），請在建議中特別強調如何達成此目的。
-                        2. **產品類型**：請根據產品屬性（如 B2B, B2C, SaaS, 工具類）調整建議的深度與複雜度。
-                        3. **目標族群**：請在 Edge Cases 與 Error States 中加入針對該族群的特殊考量。
-                        4. **跨頁面影響**：必須思考此功能對「其他頁面」的連動影響。
-                        
-                        必須完整覆蓋以下七個部分：
-                        1. happy_path: 理想流程（Happy Path）
-                        2. negative_path: 錯誤流程（Error States）
-                        3. edge_cases: 極限與邊界情況（Limit Cases）
-                        4. system_states: 空白與載入狀態（Empty & Loading）
-                        5. cross_page_impacts: 跨頁面與全局影響 (Cross-page Impacts)
-                        6. competitor_references: 競品參考 (Competitor References) - 請盡量列出 5 個以上相關競品或更多，不要只列 3 個。請提供具體的參考點。
-                        7. user_flow_mermaid: 一個完整的 Mermaid.js flowchart 字串。請嚴格遵守 Mermaid 語法：所有節點的文字標籤(Label)都必須使用雙引號包裹，例如 id["內容"]。若內容本身包含雙引號，請替換為單引號。請避免在標籤外使用特殊字元。
+                        Mermaid 圖表邏輯不變，請繪製完整的流程圖。
+                        **特別注意**：Mermaid 節點標籤若包含括號 ()、中括號 []、大括號 {}，請務必使用雙引號包裹內容。
                         
                         請以嚴格的 JSON 格式回傳，不要使用 markdown code block，不要有任何註釋。
                         Response MUST be valid JSON string only.
                         {
-                          "happy_path": [{ "id": "h1", "title": "標題", "desc": "詳細描述" }],
-                          "negative_path": [{ "id": "n1", "title": "標題", "desc": "詳細描述" }],
-                          "edge_cases": [{ "id": "e1", "title": "標題", "desc": "詳細描述" }],
-                          "system_states": [{ "id": "s1", "title": "標題", "desc": "詳細描述" }],
+                          "steps": [
+                            {
+                              "id": "step1",
+                              "title": "步驟 1：詳細步驟名稱",
+                              "happy_path": [{ "id": "s1_h1", "title": "標題", "desc": "詳細描述" }],
+                              "negative_path": [{ "id": "s1_n1", "title": "標題", "desc": "詳細描述" }],
+                              "user_negative_flow": [{ "id": "s1_u1", "title": "標題", "desc": "例如：誤觸返回鍵、點擊清除按鈕" }],
+                              "edge_cases": [{ "id": "s1_e1", "title": "標題", "desc": "詳細描述" }],
+                              "system_states": [{ "id": "s1_s1", "title": "標題", "desc": "詳細描述" }]
+                            }
+                          ],
                           "cross_page_impacts": [{ "id": "c1", "title": "標題", "desc": "詳細描述" }],
                           "competitor_references": [{ "id": "r1", "title": "產品名稱", "desc": "值得參考的設計細節與原因" }],
                           "user_flow_mermaid": "graph TD..."
@@ -597,23 +627,18 @@
                     
                     const parsedData = parseGeminiResponse(text);
                     
-                    // Apply auto-fix for common mermaid errors
                     if (parsedData.user_flow_mermaid) {
                         parsedData.user_flow_mermaid = fixCommonMermaidErrors(parsedData.user_flow_mermaid);
                     }
                     
-                    // 1. Reset checked items for new generation
                     setCheckedItems({});
                     
-                    setResult(parsedData);
-                    
-                    // 2. Save to history and get ID
                     const newId = saveToHistory(parsedData, {
                         input, audience, platform, constraints, productType, designGoal, image
                     });
                     
-                    // 3. Set current history ID for subsequent updates
                     setCurrentHistoryId(newId);
+                    setResult(parsedData);
 
                 } catch (err) {
                     console.error(err);
@@ -628,27 +653,63 @@
                 
                 let text = `UX Design Checklist: ${input}\n`;
                 if (designGoal) text += `Design Goal: ${designGoal}\n`;
-                if (productType) text += `Product Type: ${productType}\n`;
                 text += '\n';
                 
-                const categories = [
-                    { key: 'happy_path', label: '🟢 理想流程 (Happy Path)' },
-                    { key: 'negative_path', label: '🔴 錯誤流程 (Error States)' },
-                    { key: 'edge_cases', label: '⚡ 極限與邊界 (Limit Cases)' },
-                    { key: 'system_states', label: '⚪ 空白與載入 (Empty & Loading)' },
-                    { key: 'cross_page_impacts', label: '🔗 跨頁面影響 (Cross-page Impacts)' },
-                    { key: 'competitor_references', label: '🔍 競品參考 (Competitor References)' }
-                ];
+                if (result.steps) {
+                    // New Structure
+                    result.steps.forEach(step => {
+                        text += `### ${step.title}\n`;
+                        
+                        if(step.happy_path?.length) {
+                            text += `🟢 正向流程 (Happy Path):\n`;
+                            step.happy_path.forEach(i => text += `- [ ] ${i.title}: ${i.desc}\n`);
+                        }
+                        // Moved User Negative Flow here (right after Happy Path)
+                        if(step.user_negative_flow?.length) {
+                            text += `🟠 負向流程 (Negative Actions):\n`;
+                            step.user_negative_flow.forEach(i => text += `- [ ] ${i.title}: ${i.desc}\n`);
+                        }
+                        if(step.negative_path?.length) {
+                            text += `🔴 錯誤流程 (Error States):\n`;
+                            step.negative_path.forEach(i => text += `- [ ] ${i.title}: ${i.desc}\n`);
+                        }
+                        if(step.edge_cases?.length) {
+                            text += `⚡ 極限情況:\n`;
+                            step.edge_cases.forEach(i => text += `- [ ] ${i.title}: ${i.desc}\n`);
+                        }
+                        if(step.system_states?.length) {
+                            text += `⚪ 系統狀態:\n`;
+                            step.system_states.forEach(i => text += `- [ ] ${i.title}: ${i.desc}\n`);
+                        }
+                        text += '\n';
+                    });
 
-                categories.forEach(cat => {
-                    if (result[cat.key]) {
-                        text += `${cat.label}\n`;
-                        result[cat.key].forEach(item => {
-                            text += `- [ ] ${item.title}: ${item.desc}\n`;
-                        });
+                    if(result.cross_page_impacts?.length) {
+                        text += `### 🔗 跨頁面影響\n`;
+                        result.cross_page_impacts.forEach(i => text += `- [ ] ${i.title}: ${i.desc}\n`);
                         text += '\n';
                     }
-                });
+                } else {
+                    // Legacy Structure Fallback
+                     const categories = [
+                        { key: 'happy_path', label: '🟢 正向流程 (Happy Path)' },
+                        { key: 'negative_path', label: '🔴 錯誤流程 (Error States)' },
+                        { key: 'edge_cases', label: '⚡ 極限與邊界 (Limit Cases)' },
+                        { key: 'system_states', label: '⚪ 空白與載入 (Empty & Loading)' },
+                        { key: 'cross_page_impacts', label: '🔗 跨頁面影響 (Cross-page Impacts)' },
+                        { key: 'competitor_references', label: '🔍 競品參考 (Competitor References)' }
+                    ];
+
+                    categories.forEach(cat => {
+                        if (result[cat.key]) {
+                            text += `${cat.label}\n`;
+                            result[cat.key].forEach(item => {
+                                text += `- [ ] ${item.title}: ${item.desc}\n`;
+                            });
+                            text += '\n';
+                        }
+                    });
+                }
 
                 if (result.user_flow_mermaid) {
                     text += `\n🌊 User Flow (Mermaid):\n\`\`\`mermaid\n${result.user_flow_mermaid}\n\`\`\``;
@@ -705,9 +766,9 @@
                 }
             };
 
-            // Configuration for Detail Sub-tabs
+            // Configuration for Detail Sub-tabs (Legacy)
             const detailTabs = [
-                { id: 'happy_path', label: '理想流程', fullLabel: '理想流程 (Happy Path)', icon: Zap, iconColor: 'text-yellow-500', borderColor: 'border-t-yellow-400', bgHover: 'hover:bg-yellow-50', textActive: 'text-yellow-700', borderActive: 'border-yellow-500', bgActive: 'bg-yellow-50' },
+                { id: 'happy_path', label: '正向流程', fullLabel: '正向流程 (Happy Path)', icon: Zap, iconColor: 'text-yellow-500', borderColor: 'border-t-yellow-400', bgHover: 'hover:bg-yellow-50', textActive: 'text-yellow-700', borderActive: 'border-yellow-500', bgActive: 'bg-yellow-50' },
                 { id: 'negative_path', label: '錯誤流程', fullLabel: '錯誤流程 (Error States)', icon: AlertTriangle, iconColor: 'text-red-500', borderColor: 'border-t-red-400', bgHover: 'hover:bg-red-50', textActive: 'text-red-700', borderActive: 'border-red-500', bgActive: 'bg-red-50' },
                 { id: 'edge_cases', label: '極限情況', fullLabel: '極限與邊界 (Limit Cases)', icon: Box, iconColor: 'text-purple-500', borderColor: 'border-t-purple-400', bgHover: 'hover:bg-purple-50', textActive: 'text-purple-700', borderActive: 'border-purple-500', bgActive: 'bg-purple-50' },
                 { id: 'system_states', label: '系統狀態', fullLabel: '空白與載入 (Empty & Loading)', icon: RefreshCw, iconColor: 'text-blue-500', borderColor: 'border-t-blue-400', bgHover: 'hover:bg-blue-50', textActive: 'text-blue-700', borderActive: 'border-blue-500', bgActive: 'bg-blue-50' },
@@ -760,17 +821,17 @@
                                 </div>
                                 
                                 <div className="space-y-4">
-                                    <p className="text-sm text-gray-500 leading-relaxed">
+                                    <p className="text-base text-gray-500 leading-relaxed">
                                         請輸入您的 Google Gemini API Key 以使用生成功能。您的 Key 僅會儲存在本地瀏覽器中，不會傳送至其他伺服器。
                                     </p>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                                        <label className="block text-base font-medium text-gray-700 mb-1">API Key</label>
                                         <input 
                                             type="password" 
                                             value={userApiKey}
                                             onChange={(e) => setUserApiKey(e.target.value)}
                                             placeholder="請輸入 AI API Key..."
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition-all text-sm"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition-all text-base"
                                         />
                                     </div>
                                 </div>
@@ -778,13 +839,13 @@
                                 <div className="flex gap-3 pt-2">
                                     <button 
                                         onClick={() => setShowApiModal(false)}
-                                        className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
+                                        className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors text-base"
                                     >
                                         取消
                                     </button>
                                     <button 
                                         onClick={handleSaveApiKey}
-                                        className="flex-1 py-2.5 rounded-xl bg-brand-600 text-white font-medium hover:bg-brand-700 shadow-md shadow-brand-200 transition-all"
+                                        className="flex-1 py-2.5 rounded-xl bg-brand-600 text-white font-medium hover:bg-brand-700 shadow-md shadow-brand-200 transition-all text-base"
                                     >
                                         儲存設定
                                     </button>
@@ -810,19 +871,19 @@
                                     </div>
                                     <h3 className="font-bold text-lg text-gray-900">清空所有紀錄？</h3>
                                 </div>
-                                <p className="text-gray-500 text-sm leading-relaxed">
+                                <p className="text-gray-500 text-base leading-relaxed">
                                     此動作將會刪除瀏覽器中儲存的所有歷史分析報告，且無法復原。確定要繼續嗎？
                                 </p>
                                 <div className="flex gap-3 pt-2">
                                     <button 
                                         onClick={() => setShowClearConfirm(false)} 
-                                        className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium transition-colors"
+                                        className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium transition-colors text-base"
                                     >
                                         取消
                                     </button>
                                     <button 
                                         onClick={confirmClearHistory} 
-                                        className="flex-1 py-2.5 rounded-xl bg-red-600 text-white hover:bg-red-700 shadow-md shadow-red-200 font-medium transition-colors"
+                                        className="flex-1 py-2.5 rounded-xl bg-red-600 text-white hover:bg-red-700 shadow-md shadow-red-200 font-medium transition-colors text-base"
                                     >
                                         確認清空
                                     </button>
@@ -857,7 +918,7 @@
                                         {history.length > 0 && (
                                             <button 
                                                 onClick={handleClearHistoryClick}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors mr-2"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 text-base text-red-500 hover:bg-red-50 rounded-lg transition-colors mr-2"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                                 清空
@@ -880,7 +941,7 @@
                                                 <HistoryIcon className="w-10 h-10 opacity-40" />
                                             </div>
                                             <p className="text-lg font-medium text-gray-500">尚無歷史紀錄</p>
-                                            <p className="text-sm mt-1 opacity-70">您生成的分析報告會自動儲存於此</p>
+                                            <p className="text-base mt-1 opacity-70">您生成的分析報告會自動儲存於此</p>
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -893,7 +954,7 @@
                                                         className="group bg-white border border-gray-200 rounded-xl p-5 hover:border-brand-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col h-full relative"
                                                     >
                                                         <div className="flex justify-between items-start mb-3">
-                                                            <span className="text-xs font-medium text-gray-400 flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-full border border-gray-100">
+                                                            <span className="text-sm font-medium text-gray-400 flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-full border border-gray-100">
                                                                 <Clock className="w-3 h-3" />
                                                                 {new Date(item.timestamp).toLocaleString()}
                                                             </span>
@@ -912,12 +973,12 @@
                                                         
                                                         <div className="mt-auto flex flex-wrap gap-2">
                                                             {item.params.productType && (
-                                                                <span className="text-[10px] px-2 py-1 bg-blue-50 text-blue-600 rounded border border-blue-100 font-medium">
+                                                                <span className="text-sm px-2 py-1 bg-blue-50 text-blue-600 rounded border border-blue-100 font-medium">
                                                                     {item.params.productType}
                                                                 </span>
                                                             )}
                                                             {item.params.hasImage && (
-                                                                <span className="text-[10px] px-2 py-1 bg-purple-50 text-purple-600 rounded border border-purple-100 font-medium flex items-center gap-1">
+                                                                <span className="text-sm px-2 py-1 bg-purple-50 text-purple-600 rounded border border-purple-100 font-medium flex items-center gap-1">
                                                                     <ImageIcon className="w-3 h-3"/> 附圖
                                                                 </span>
                                                             )}
@@ -944,7 +1005,7 @@
                                         <div className="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-200">
                                             <LayoutTemplate className="w-7 h-7 text-white" />
                                         </div>
-                                        <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">UX Flow Master</h1>
+                                        <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">UX Flow Checklist</h1>
                                     </div>
                                     <p className="text-neutral-500 text-base leading-relaxed max-w-lg">
                                         專為設計師打造的智能檢查器。<br/>輸入需求或貼上截圖，瞬間補全遺漏的 UX 狀態。
@@ -956,7 +1017,7 @@
                                     
                                     {/* Main Input Area */}
                                     <div className="space-y-4">
-                                        <label className="block text-sm font-bold text-neutral-800 ml-1">
+                                        <label className="block text-base font-bold text-neutral-800 ml-1">
                                             你想繪製什麼功能流程？
                                         </label>
                                         <div 
@@ -1012,7 +1073,7 @@
                                                 <button 
                                                     key={chip}
                                                     onClick={() => setInput(chip)}
-                                                    className="px-3 py-1 text-sm bg-gray-50 border border-gray-100 rounded-full text-neutral-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all"
+                                                    className="px-3 py-1 text-base bg-gray-50 border border-gray-100 rounded-full text-neutral-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all"
                                                 >
                                                     {chip}
                                                 </button>
@@ -1024,7 +1085,7 @@
                                     <div className="pt-2">
                                         <button 
                                             onClick={() => setShowAdvanced(!showAdvanced)}
-                                            className="flex items-center gap-1.5 text-sm font-medium text-gray-400 hover:text-brand-600 transition-colors py-2 ml-1"
+                                            className="flex items-center gap-1.5 text-base font-medium text-gray-400 hover:text-brand-600 transition-colors py-2 ml-1"
                                         >
                                             <span>進階設定</span>
                                             {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -1040,7 +1101,7 @@
                                                     { label: '特殊限制', val: constraints, set: setConstraints, ph: '弱網, 高資安...' },
                                                 ].map((field, idx) => (
                                                     <div key={idx} className={field.fullWidth ? 'col-span-2' : ''}>
-                                                        <label className="block text-sm font-medium text-neutral-500 mb-1 ml-1">
+                                                        <label className="block text-base font-medium text-neutral-500 mb-1 ml-1">
                                                             {field.label}
                                                         </label>
                                                         <input 
@@ -1048,7 +1109,7 @@
                                                             value={field.val}
                                                             onChange={(e) => field.set(e.target.value)}
                                                             placeholder={field.ph}
-                                                            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition-all"
+                                                            className="w-full px-3 py-2 text-base rounded-lg border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition-all"
                                                         />
                                                     </div>
                                                 ))}
@@ -1076,7 +1137,7 @@
                                                         <Sparkles className="w-full h-full overflow-visible" />
                                                     )}
                                                 </div>
-                                                <div>{loading ? '正在分析 UX 流程...' : '開始分析'}</div>
+                                                <div>{loading ? '正在分析 UX 流程...' : '生成清單'}</div>
                                             </button>
                                     </div>
                                 </div>
@@ -1094,7 +1155,7 @@
                                     <div className="flex items-center gap-4">
                                         <button 
                                             onClick={handleBackToHome}
-                                            className="flex items-center gap-1 text-neutral-600 hover:text-brand-600 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-all font-medium"
+                                            className="flex items-center gap-1 text-neutral-600 hover:text-brand-600 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-all font-medium text-base"
                                         >
                                             <ArrowLeft className="w-4 h-4" />
                                             <span>返回查詢</span>
@@ -1107,7 +1168,7 @@
                                         {/* Progress Indicator Badge */}
                                         {progressStats.total > 0 && (
                                             <div className="hidden md:flex flex-col gap-1.5 ml-6 min-w-[140px] animate-in fade-in slide-in-from-left-4">
-                                                <div className="flex items-center justify-between text-xs leading-none">
+                                                <div className="flex items-center justify-between text-sm leading-none">
                                                     <span className="font-medium text-gray-400">檢查進度</span>
                                                     <span className="font-bold text-brand-600 tracking-wider">
                                                         {progressStats.checked} <span className="text-gray-300 font-normal">/</span> {progressStats.total}
@@ -1125,7 +1186,7 @@
 
                                     <button
                                         onClick={copyToClipboard}
-                                        className="flex items-center gap-2 text-sm font-medium px-4 py-2 bg-white border border-gray-200 rounded-lg hover:border-brand-300 hover:text-brand-600 hover:shadow-sm transition-all"
+                                        className="flex items-center gap-2 text-base font-medium px-4 py-2 bg-white border border-gray-200 rounded-lg hover:border-brand-300 hover:text-brand-600 hover:shadow-sm transition-all"
                                     >
                                         {copied ? <Check className="w-4 h-4" /> : <Clipboard className="w-4 h-4" />}
                                         {copied ? '已複製' : '複製報告'}
@@ -1137,14 +1198,15 @@
                                 {/* Tabs */}
                                 <div className="bg-gray-100/50 p-1 rounded-xl inline-flex mb-8 border border-gray-200">
                                     {[
-                                        { id: 'details', label: '流程細節' },
+                                        { id: 'details', label: '流程細節 (Process Details)' },
+                                        { id: 'impacts', label: '跨頁面影響 (Impacts)' },
                                         { id: 'userflow', label: 'User Flow' },
                                         { id: 'references', label: '競品參考' }
                                     ].map(tab => (
                                         <button
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
-                                            className={`flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                                            className={`flex items-center justify-center px-6 py-2.5 text-base font-medium rounded-lg transition-all ${
                                                 activeTab === tab.id 
                                                 ? 'bg-white text-brand-700 shadow-sm ring-1 ring-black/5' 
                                                 : 'text-neutral-500 hover:text-neutral-900 hover:bg-gray-200/50'
@@ -1158,51 +1220,178 @@
                                 {/* Content Area */}
                                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
                                     
+                                    {/* 1. DETAILS TAB: New Step-based Layout vs Legacy Layout */}
                                     {activeTab === 'details' && (
-                                        <div className="space-y-6">
-                                            {/* Sub Tabs Navigation (Progress) - Changed to Underline Tabs style */}
-                                            <div className="flex flex-nowrap overflow-x-auto gap-8 border-b border-gray-200 no-scrollbar">
-                                                {detailTabs.map((tab) => {
-                                                    const isActive = activeDetailTab === tab.id;
-                                                    return (
-                                                        <button
-                                                            key={tab.id}
-                                                            onClick={() => setActiveDetailTab(tab.id)}
-                                                            className={`
-                                                                group flex items-center gap-2 px-1 py-4 text-sm font-medium transition-all border-b-2 whitespace-nowrap
-                                                                ${isActive 
-                                                                    ? `${tab.borderActive} ${tab.textActive}`
-                                                                    : `border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300`
-                                                                }
-                                                            `}
-                                                        >
-                                                            <tab.icon className={`w-4 h-4 ${isActive ? 'currentColor' : 'text-gray-400 group-hover:text-gray-500'}`} />
-                                                            {tab.label}
-                                                        </button>
-                                                    )
-                                                })}
-                                            </div>
-
-                                            {/* Content Area for Sub-tabs */}
-                                            <div className="min-h-[400px] flex flex-col">
-                                                {detailTabs.map(tab => {
-                                                    if (activeDetailTab !== tab.id) return null;
-                                                    return (
-                                                        <div key={tab.id} className="animate-in fade-in slide-in-from-right-8 duration-300 flex-1">
-                                                            <CategoryCard
-                                                                title={tab.fullLabel}
-                                                                icon={<tab.icon className={`w-6 h-6 ${tab.iconColor}`} />}
-                                                                items={result[tab.id]}
-                                                                checkedItems={checkedItems}
-                                                                toggleCheck={toggleCheck}
-                                                            />
+                                        <>
+                                            {result.steps ? (
+                                                <div className="flex flex-col gap-6">
+                                                    {/* Step Tabs Navigation - Changed to Grid Layout */}
+                                                    <div className="bg-gray-50/80 p-4 rounded-2xl border border-gray-100">
+                                                        <div className="flex justify-between items-center mb-3 px-1">
+                                                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">流程步驟總覽</h3>
+                                                            <span className="text-xs text-gray-400">點擊切換步驟</span>
                                                         </div>
-                                                    )
-                                                })}
-                                            </div>
+                                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                                                            {result.steps.map((step, idx) => {
+                                                                const isActive = activeStepId === step.id;
+                                                                // Check completion status for this step
+                                                                // Updated to include user_negative_flow in count
+                                                                const totalItems = (step.happy_path?.length || 0) + (step.negative_path?.length || 0) + (step.user_negative_flow?.length || 0) + (step.edge_cases?.length || 0) + (step.system_states?.length || 0);
+                                                                let checkedCount = 0;
+                                                                ['happy_path', 'negative_path', 'user_negative_flow', 'edge_cases', 'system_states'].forEach(cat => {
+                                                                    if(step[cat]) step[cat].forEach(i => { if(checkedItems[i.id]) checkedCount++; });
+                                                                });
+                                                                const isComplete = totalItems > 0 && checkedCount === totalItems;
+
+                                                                return (
+                                                                    <button
+                                                                        key={step.id || idx}
+                                                                        onClick={() => setActiveStepId(step.id)}
+                                                                        className={`
+                                                                            relative flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left border
+                                                                            ${isActive 
+                                                                                ? 'bg-white border-brand-500 text-brand-700 ring-2 ring-brand-100 shadow-sm z-10' 
+                                                                                : 'bg-white border-gray-200 text-gray-600 hover:border-brand-300 hover:text-brand-600 hover:shadow-sm'
+                                                                            }
+                                                                        `}
+                                                                    >
+                                                                        <span className={`
+                                                                            w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold transition-colors
+                                                                            ${isActive ? 'bg-brand-600 text-white' : 'bg-gray-100 text-gray-500'}
+                                                                            ${isComplete && !isActive ? 'bg-green-100 text-green-600' : ''}
+                                                                        `}>
+                                                                            {isComplete && !isActive ? <Check className="w-3 h-3" /> : (idx + 1)}
+                                                                        </span>
+                                                                        <span className="truncate flex-1">
+                                                                            {step.title.replace(/^步驟 \d+[:：]\s*/, '')}
+                                                                        </span>
+                                                                        
+                                                                        {isComplete && isActive && (
+                                                                            <CheckCircle className="w-4 h-4 text-brand-600 flex-shrink-0" />
+                                                                        )}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Selected Step Content */}
+                                                    <div className="animate-in fade-in zoom-in-95 duration-300">
+                                                        {result.steps.map((step, idx) => {
+                                                            if (step.id !== activeStepId) return null;
+                                                            
+                                                            // Navigation logic
+                                                            const prevStep = idx > 0 ? result.steps[idx - 1] : null;
+                                                            const nextStep = idx < result.steps.length - 1 ? result.steps[idx + 1] : null;
+
+                                                            return (
+                                                                <div key={step.id} className="flex flex-col gap-6">
+                                                                    <StepCard 
+                                                                        step={step}
+                                                                        checkedItems={checkedItems}
+                                                                        toggleCheck={toggleCheck}
+                                                                    />
+                                                                    
+                                                                    {/* Bottom Navigation Buttons */}
+                                                                    <div className="flex justify-between items-center px-2">
+                                                                        {prevStep ? (
+                                                                            <button 
+                                                                                onClick={() => {
+                                                                                    setActiveStepId(prevStep.id);
+                                                                                    window.scrollTo({ top: 100, behavior: 'smooth' });
+                                                                                }}
+                                                                                className="flex items-center gap-2 text-gray-500 hover:text-brand-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                                                            >
+                                                                                <ArrowLeft className="w-4 h-4" />
+                                                                                <span className="text-sm font-medium">上一步：{prevStep.title.replace(/^步驟 \d+[:：]\s*/, '')}</span>
+                                                                            </button>
+                                                                        ) : <div></div>}
+
+                                                                        {nextStep ? (
+                                                                            <button 
+                                                                                onClick={() => {
+                                                                                    setActiveStepId(nextStep.id);
+                                                                                    window.scrollTo({ top: 100, behavior: 'smooth' });
+                                                                                }}
+                                                                                className="flex items-center gap-2 text-white bg-neutral-900 hover:bg-brand-600 px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all"
+                                                                            >
+                                                                                <span className="text-sm font-bold">下一步：{nextStep.title.replace(/^步驟 \d+[:：]\s*/, '')}</span>
+                                                                                <ArrowLeft className="w-4 h-4 rotate-180" />
+                                                                            </button>
+                                                                        ) : (
+                                                                            <button 
+                                                                                onClick={() => setActiveTab('impacts')}
+                                                                                className="flex items-center gap-2 text-brand-600 bg-brand-50 hover:bg-brand-100 px-5 py-2.5 rounded-lg transition-colors"
+                                                                            >
+                                                                                <span className="text-sm font-bold">檢查跨頁面影響</span>
+                                                                                <ArrowLeft className="w-4 h-4 rotate-180" />
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                /* Legacy Layout for old history items */
+                                                <div className="space-y-6">
+                                                    <div className="flex flex-nowrap overflow-x-auto gap-8 border-b border-gray-200 no-scrollbar">
+                                                        {detailTabs.map((tab) => {
+                                                            const isActive = activeDetailTab === tab.id;
+                                                            return (
+                                                                <button
+                                                                    key={tab.id}
+                                                                    onClick={() => setActiveDetailTab(tab.id)}
+                                                                    className={`
+                                                                        group flex items-center gap-2 px-1 py-4 text-base font-medium transition-all border-b-2 whitespace-nowrap
+                                                                        ${isActive 
+                                                                            ? `${tab.borderActive} ${tab.textActive}`
+                                                                            : `border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300`
+                                                                        }
+                                                                    `}
+                                                                >
+                                                                    <tab.icon className={`w-4 h-4 ${isActive ? 'currentColor' : 'text-gray-400 group-hover:text-gray-500'}`} />
+                                                                    {tab.label}
+                                                                </button>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                    <div className="min-h-[400px] flex flex-col">
+                                                        {detailTabs.map(tab => {
+                                                            if (activeDetailTab !== tab.id) return null;
+                                                            return (
+                                                                <div key={tab.id} className="animate-in fade-in slide-in-from-right-8 duration-300 flex-1">
+                                                                    <CategoryCard
+                                                                        title={tab.fullLabel}
+                                                                        icon={<tab.icon className={`w-6 h-6 ${tab.iconColor}`} />}
+                                                                        items={result[tab.id]}
+                                                                        checkedItems={checkedItems}
+                                                                        toggleCheck={toggleCheck}
+                                                                    />
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {/* 2. IMPACTS TAB (New) or Legacy fallback */}
+                                    {activeTab === 'impacts' && (
+                                        <div className="grid grid-cols-1 gap-6">
+                                            <CategoryCard 
+                                                title="跨頁面影響 (Cross-page Impacts)" 
+                                                icon={<Network className="w-6 h-6 text-orange-500" />}
+                                                items={result.cross_page_impacts} 
+                                                checkedItems={checkedItems}
+                                                toggleCheck={toggleCheck}
+                                            />
                                         </div>
                                     )}
 
+                                    {/* 3. USER FLOW TAB */}
                                     {activeTab === 'userflow' && result.user_flow_mermaid && (
                                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                                             <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50/50">
@@ -1210,13 +1399,13 @@
                                                     <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
                                                         <button 
                                                             onClick={() => setShowDiagram(true)}
-                                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${showDiagram ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-base font-medium transition-all ${showDiagram ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                                                         >
                                                             <Image className="w-4 h-4"/> 預覽圖表
                                                         </button>
                                                         <button 
                                                             onClick={() => setShowDiagram(false)}
-                                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${!showDiagram ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-base font-medium transition-all ${!showDiagram ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                                                         >
                                                             <CodeIcon className="w-4 h-4"/> 原始碼
                                                         </button>
@@ -1228,7 +1417,7 @@
                                                         href={getMermaidLiveUrl(result.user_flow_mermaid)}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="flex items-center gap-1.5 text-sm text-neutral-600 hover:text-brand-600 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-brand-200"
+                                                        className="flex items-center gap-1.5 text-base text-neutral-600 hover:text-brand-600 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-brand-200"
                                                     >
                                                         <ExternalLink className="w-3.5 h-3.5" />
                                                         前往 Mermaid Live
@@ -1236,7 +1425,7 @@
                                                     <div className="h-4 w-px bg-gray-300 mx-1"></div>
                                                     <button
                                                         onClick={copyMermaid}
-                                                        className="flex items-center gap-1.5 text-sm text-brand-600 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors"
+                                                        className="flex items-center gap-1.5 text-base text-brand-600 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors"
                                                     >
                                                         {mermaidCopied ? <Check className="w-3.5 h-3.5" /> : <Clipboard className="w-3.5 h-3.5" />}
                                                         {mermaidCopied ? '已複製' : '複製代碼'}
@@ -1249,7 +1438,7 @@
                                                      <MermaidDiagram code={result.user_flow_mermaid} />
                                                 ) : (
                                                     <div className="bg-gray-50 p-0 overflow-hidden h-full">
-                                                        <pre className="font-mono text-sm text-gray-600 w-full overflow-auto p-6 bg-gray-50/50 min-h-[300px]">
+                                                        <pre className="font-mono text-base text-gray-600 w-full overflow-auto p-6 bg-gray-50/50 min-h-[300px]">
                                                             {result.user_flow_mermaid}
                                                         </pre>
                                                     </div>
@@ -1258,6 +1447,7 @@
                                         </div>
                                     )}
 
+                                    {/* 4. REFERENCES TAB */}
                                     {activeTab === 'references' && (
                                         <div className="grid grid-cols-1 gap-6">
                                             <CategoryCard 
@@ -1290,12 +1480,92 @@
             );
         }
 
+        // New Component: Step Card for Process-based View
+        function StepCard({ step, checkedItems, toggleCheck }) {
+            const sections = [
+                { key: 'happy_path', label: '正向流程 (Happy Path)', color: 'text-green-700' },
+                { key: 'user_negative_flow', label: '負向流程 (Negative Actions)', color: 'text-orange-700' },
+                { key: 'negative_path', label: '錯誤流程 (Error States)', color: 'text-red-700' },
+                { key: 'edge_cases', label: '極限與邊界 (Edge Cases)', color: 'text-purple-700' },
+                { key: 'system_states', label: '系統狀態 (System States)', color: 'text-blue-700' },
+            ];
+
+            return (
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100">
+                        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <span className="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-base font-bold shadow-sm">
+                                {step.id.replace(/\D/g, '') || '#'}
+                            </span>
+                            {step.title}
+                        </h3>
+                    </div>
+                    {/* Layout changed to vertical stack (flex-col) for better reading flow */}
+                    <div className="p-6 flex flex-col gap-6">
+                        {sections.map(section => {
+                            const items = step[section.key];
+                            if (!items || items.length === 0) return null;
+                            
+                            return (
+                                <div key={section.key} className="space-y-3">
+                                    {/* Section Header with clearer visual separation - Removed Icons */}
+                                    <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+                                        <h4 className={`text-base font-bold tracking-wide ${section.color}`}>
+                                            {section.label}
+                                        </h4>
+                                    </div>
+                                    
+                                    {/* Items List - Compact List Style (No Cards) */}
+                                    <div className="space-y-1 pl-1">
+                                        {items.map((item) => {
+                                            const isChecked = checkedItems[item.id] || false;
+                                            return (
+                                                <div 
+                                                    key={item.id}
+                                                    onClick={() => toggleCheck(item.id)}
+                                                    className={`
+                                                        group flex items-start gap-3 cursor-pointer py-2 px-2 rounded-lg transition-all
+                                                        ${isChecked 
+                                                            ? 'opacity-50' 
+                                                            : 'hover:bg-gray-50'
+                                                        }
+                                                    `}
+                                                >
+                                                    <div className={`
+                                                        mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200
+                                                        ${isChecked 
+                                                            ? 'bg-neutral-800 border-neutral-800' 
+                                                            : 'border-gray-300 bg-white group-hover:border-brand-500'
+                                                        }
+                                                    `}>
+                                                        {isChecked && <Check className="w-3.5 h-3.5 text-white" />}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <span className={`text-base font-bold block mb-0.5 ${isChecked ? 'line-through text-gray-500' : 'text-gray-800'}`}>
+                                                            {item.title}
+                                                        </span>
+                                                        <span className="text-gray-500 text-sm leading-relaxed block">
+                                                            {item.desc}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        }
+
+        // Legacy Component (Kept for old history compatibility)
         function CategoryCard({ title, icon, items, checkedItems, toggleCheck, noCheckbox = false }) {
             if (!items || items.length === 0) return null;
 
             return (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-full">
-                    {/* Header: Cleaner layout without heavy borders */}
                     <div className="px-8 pt-8 pb-4 flex items-center gap-4">
                         <div className="p-2.5 bg-gray-50 rounded-xl">
                             {icon}
@@ -1303,12 +1573,11 @@
                         <div>
                             <h3 className="text-xl font-bold text-neutral-900">{title}</h3>
                         </div>
-                        <span className="ml-auto text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                        <span className="ml-auto text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
                             {items.length} 項目
                         </span>
                     </div>
 
-                    {/* Content List: More spacing, no background blocks */}
                     <div className="px-8 pb-8 pt-2 space-y-6">
                         {items.map((item, idx) => {
                             const isChecked = checkedItems[item.id] || false;
@@ -1318,7 +1587,6 @@
                                     onClick={() => !noCheckbox && toggleCheck(item.id)}
                                     className={`group flex items-start gap-4 ${!noCheckbox ? 'cursor-pointer' : ''}`}
                                 >
-                                    {/* Custom Checkbox */}
                                     {!noCheckbox && (
                                         <div className={`
                                             mt-1 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200
@@ -1331,12 +1599,11 @@
                                         </div>
                                     )}
                                     
-                                    {/* Text Content */}
                                     <div className={`flex-1 transition-all duration-300 ${isChecked ? 'opacity-40' : 'opacity-100'}`}>
                                         <h4 className={`text-base font-bold mb-1.5 transition-colors ${isChecked ? 'text-neutral-500 line-through decoration-gray-300' : 'text-neutral-800 group-hover:text-brand-700'}`}>
                                             {item.title}
                                         </h4>
-                                        <p className="text-sm text-neutral-500 leading-relaxed">
+                                        <p className="text-base text-neutral-500 leading-relaxed">
                                             {item.desc}
                                         </p>
                                     </div>

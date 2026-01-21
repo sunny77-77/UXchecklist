@@ -137,14 +137,15 @@
 
         // --- Icons Components (SVG) ---
         const IconBase = ({ children, className, onClick }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} onClick={onClick}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`overflow-visible ${className}`} onClick={onClick}>
                 {children}
             </svg>
         );
 
         const LayoutTemplate = ({ className }) => (<IconBase className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="9" y2="21"/></IconBase>);
         const Loader2 = ({ className }) => (<IconBase className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></IconBase>);
-        const Sparkles = ({ className }) => (<IconBase className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></IconBase>);
+        // FIXED: Corrected Sparkles path to ensure the right side is not "cut off". This is a complete 4-point star path.
+        const Sparkles = ({ className }) => (<IconBase className={className}><path d="M12 3 L10.088 8.813 A 2 2 0 0 1 8.813 10.088 L3 12 L8.813 13.912 A 2 2 0 0 1 10.088 15.187 L12 21 L13.912 15.187 A 2 2 0 0 1 15.187 13.912 L21 12 L15.187 10.088 A 2 2 0 0 1 13.912 8.813 Z" /></IconBase>);
         const AlertTriangle = ({ className }) => (<IconBase className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></IconBase>);
         const CheckCircle = ({ className }) => (<IconBase className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconBase>);
         const Clipboard = ({ className }) => (<IconBase className={className}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></IconBase>);
@@ -169,9 +170,14 @@
         const Trash2 = ({ className }) => (<IconBase className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>);
         const Clock = ({ className }) => (<IconBase className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconBase>);
         const CodeIcon = ({ className }) => (<IconBase className={className}><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></IconBase>);
-        const Image = ({ className }) => (<IconBase className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></IconBase>);
+        
+        // Removed conflicting Image component definition. 
+        // Replaced usages of <Image /> with <ImageIcon />
+        
         const PieChart = ({ className }) => (<IconBase className={className}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></IconBase>);
         const KeyIcon = ({ className }) => (<IconBase className={className}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" /></IconBase>);
+        const Maximize2 = ({ className }) => (<IconBase className={className}><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></IconBase>);
+        const Download = ({ className }) => (<IconBase className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></IconBase>);
 
 
         // --- Helper Function for JSON Parsing ---
@@ -258,10 +264,15 @@
             const [currentHistoryId, setCurrentHistoryId] = useState(null); 
             const [activeTab, setActiveTab] = useState('details');
             const [activeDetailTab, setActiveDetailTab] = useState('happy_path'); // Only used for Legacy view
-            const [activeStepId, setActiveStepId] = useState(null); // New: For tracking active step tab
+            const [activeStepId, setActiveStepId] = useState(null); 
             const [showDiagram, setShowDiagram] = useState(true); 
             const [showClearConfirm, setShowClearConfirm] = useState(false); 
+            const [showUserFlowModal, setShowUserFlowModal] = useState(false); // New: User Flow Modal
             
+            // Refs for diagrams
+            const modalDiagramRef = useRef(null);
+            const inlineDiagramRef = useRef(null);
+
             // API Key State
             const [showApiModal, setShowApiModal] = useState(false);
             const [userApiKey, setUserApiKey] = useState('');
@@ -371,7 +382,10 @@
             };
 
             const handleSaveApiKey = () => {
-                localStorage.setItem('ux_flow_api_key', userApiKey);
+                // Trim whitespace before saving
+                const trimmedKey = userApiKey.trim();
+                localStorage.setItem('ux_flow_api_key', trimmedKey);
+                setUserApiKey(trimmedKey);
                 setShowApiModal(false);
                 showToastMessage("API Key 已儲存");
             };
@@ -393,6 +407,76 @@
                     setHistory(updatedHistory);
                     localStorage.setItem('ux_flow_history', JSON.stringify(updatedHistory));
                 }
+            };
+
+            // --- Generate Image Blob Helper ---
+            const generateImageBlob = (ref, callback) => {
+                const svg = ref.current?.querySelector('svg');
+                if (!svg) {
+                    showToastMessage("找不到圖片，請稍後再試", "error");
+                    return;
+                }
+                
+                const canvas = document.createElement("canvas");
+                const svgSize = svg.getBoundingClientRect();
+                
+                // Scale for better resolution (Retina)
+                const scale = 2;
+                canvas.width = svgSize.width * scale;
+                canvas.height = svgSize.height * scale;
+                
+                const ctx = canvas.getContext("2d");
+                ctx.scale(scale, scale);
+                
+                // Fill white background
+                ctx.fillStyle = "white";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const data = new XMLSerializer().serializeToString(svg);
+                const img = new window.Image();
+                
+                const blob = new Blob([data], { type: "image/svg+xml;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0);
+                    URL.revokeObjectURL(url);
+                    
+                    canvas.toBlob((blob) => {
+                        if (blob) callback(blob);
+                    }, "image/png");
+                };
+                
+                img.src = url;
+            };
+
+            // --- Copy Diagram to Clipboard ---
+            const copyDiagram = (ref) => {
+                generateImageBlob(ref, (blob) => {
+                    try {
+                        const item = new ClipboardItem({ "image/png": blob });
+                        navigator.clipboard.write([item]);
+                        showToastMessage("圖片已複製！可直接貼上 (Ctrl+V)");
+                    } catch (err) {
+                        console.error("Clipboard write failed", err);
+                        showToastMessage("複製失敗，請使用下載功能", "error");
+                    }
+                });
+            };
+
+            // --- Download SVG as PNG Function ---
+            const downloadDiagram = (ref, fileName = 'ux-flow-diagram') => {
+                generateImageBlob(ref, (blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const downloadLink = document.createElement("a");
+                    downloadLink.href = url;
+                    downloadLink.download = `${fileName}.png`;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    URL.revokeObjectURL(url);
+                    showToastMessage("圖片下載成功！");
+                });
             };
 
             // --- History Functions ---
@@ -524,7 +608,9 @@
             const generateFlows = async () => {
                 if (!input.trim() && !image) return;
                 
-                const currentApiKey = userApiKey || defaultApiKey;
+                // Trim key to avoid space issues
+                const currentApiKey = (userApiKey || defaultApiKey || "").trim();
+                
                 if (!currentApiKey) {
                     setShowApiModal(true);
                     showToastMessage("請先設定 API Key", "error");
@@ -642,7 +728,13 @@
 
                 } catch (err) {
                     console.error(err);
-                    showToastMessage('生成失敗，請稍後再試。' + err.message, 'error');
+                    // Specific handling for API Key errors
+                    if (err.message.includes('API key') || err.message.includes('403') || err.message.includes('400')) {
+                        setShowApiModal(true);
+                        showToastMessage('API Key 無效或過期，請重新設定', 'error');
+                    } else {
+                        showToastMessage('生成失敗，請稍後再試。' + err.message, 'error');
+                    }
                 } finally {
                     setLoading(false);
                 }
@@ -1123,21 +1215,22 @@
                                                 onClick={generateFlows}
                                                 disabled={loading || (!input.trim() && !image)}
                                                 className={`
-                                                    w-full py-4 rounded-xl flex items-center justify-center gap-3 font-bold text-lg transition-all duration-300
+                                                    w-full py-4 rounded-xl flex items-center justify-center gap-2.5 font-bold text-lg transition-all duration-300 shadow-lg shadow-brand-200 group
                                                     ${loading || (!input.trim() && !image)
-                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                        : 'bg-brand-600 text-white shadow-xl shadow-brand-200 hover:bg-brand-700 hover:shadow-2xl hover:-translate-y-1 active:translate-y-0'
+                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                                                        : 'bg-brand-600 text-white hover:bg-brand-700 hover:-translate-y-0.5 active:translate-y-0'
                                                     }
                                                 `}
                                             >
-                                                <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                                                <div className="relative">
                                                     {loading ? (
-                                                        <Loader2 className="w-full h-full animate-spin" />
+                                                        <Loader2 className="w-6 h-6 animate-spin" />
                                                     ) : (
-                                                        <Sparkles className="w-full h-full overflow-visible" />
+                                                        <Sparkles className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
                                                     )}
                                                 </div>
-                                                <div>{loading ? '正在分析 UX 流程...' : '生成清單'}</div>
+                                                
+                                                <span>{loading ? '正在分析 UX 流程...' : '生成清單'}</span>
                                             </button>
                                     </div>
                                 </div>
@@ -1198,9 +1291,8 @@
                                 {/* Tabs */}
                                 <div className="bg-gray-100/50 p-1 rounded-xl inline-flex mb-8 border border-gray-200">
                                     {[
-                                        { id: 'details', label: '流程細節 (Process Details)' },
-                                        { id: 'impacts', label: '跨頁面影響 (Impacts)' },
-                                        { id: 'userflow', label: 'User Flow' },
+                                        { id: 'details', label: '流程細節' },
+                                        { id: 'impacts', label: '跨頁面影響' },
                                         { id: 'references', label: '競品參考' }
                                     ].map(tab => (
                                         <button
@@ -1225,17 +1317,25 @@
                                         <>
                                             {result.steps ? (
                                                 <div className="flex flex-col gap-6">
-                                                    {/* Step Tabs Navigation - Changed to Grid Layout */}
+                                                    {/* Step Tabs Navigation & User Flow Trigger */}
                                                     <div className="bg-gray-50/80 p-4 rounded-2xl border border-gray-100">
                                                         <div className="flex justify-between items-center mb-3 px-1">
                                                             <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">流程步驟總覽</h3>
-                                                            <span className="text-xs text-gray-400">點擊切換步驟</span>
+                                                            
+                                                            {/* User Flow Button Moved to Right Side */}
+                                                            {result.user_flow_mermaid && (
+                                                                <button
+                                                                    onClick={() => setShowUserFlowModal(true)}
+                                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-brand-200 text-brand-600 rounded-lg text-xs font-bold hover:bg-brand-50 hover:border-brand-300 transition-all shadow-sm group"
+                                                                >
+                                                                    <Network className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                                                                    查看流程圖
+                                                                </button>
+                                                            )}
                                                         </div>
                                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                                                             {result.steps.map((step, idx) => {
                                                                 const isActive = activeStepId === step.id;
-                                                                // Check completion status for this step
-                                                                // Updated to include user_negative_flow in count
                                                                 const totalItems = (step.happy_path?.length || 0) + (step.negative_path?.length || 0) + (step.user_negative_flow?.length || 0) + (step.edge_cases?.length || 0) + (step.system_states?.length || 0);
                                                                 let checkedCount = 0;
                                                                 ['happy_path', 'negative_path', 'user_negative_flow', 'edge_cases', 'system_states'].forEach(cat => {
@@ -1283,6 +1383,9 @@
                                                             // Navigation logic
                                                             const prevStep = idx > 0 ? result.steps[idx - 1] : null;
                                                             const nextStep = idx < result.steps.length - 1 ? result.steps[idx + 1] : null;
+                                                            
+                                                            // Unified button style class
+                                                            const navBtnClass = "flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-gray-200 text-neutral-700 font-bold hover:border-brand-400 hover:text-brand-600 hover:shadow-md transition-all shadow-sm";
 
                                                             return (
                                                                 <div key={step.id} className="flex flex-col gap-6">
@@ -1293,19 +1396,19 @@
                                                                     />
                                                                     
                                                                     {/* Bottom Navigation Buttons */}
-                                                                    <div className="flex justify-between items-center px-2">
+                                                                    <div className="flex justify-between items-center px-1 pt-2">
                                                                         {prevStep ? (
                                                                             <button 
                                                                                 onClick={() => {
                                                                                     setActiveStepId(prevStep.id);
                                                                                     window.scrollTo({ top: 100, behavior: 'smooth' });
                                                                                 }}
-                                                                                className="flex items-center gap-2 text-gray-500 hover:text-brand-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                                                                className={navBtnClass}
                                                                             >
                                                                                 <ArrowLeft className="w-4 h-4" />
-                                                                                <span className="text-sm font-medium">上一步：{prevStep.title.replace(/^步驟 \d+[:：]\s*/, '')}</span>
+                                                                                <span className="text-sm">上一步：{prevStep.title.replace(/^步驟 \d+[:：]\s*/, '')}</span>
                                                                             </button>
-                                                                        ) : <div></div>}
+                                                                        ) : <div className="w-24"></div>}
 
                                                                         {nextStep ? (
                                                                             <button 
@@ -1313,17 +1416,17 @@
                                                                                     setActiveStepId(nextStep.id);
                                                                                     window.scrollTo({ top: 100, behavior: 'smooth' });
                                                                                 }}
-                                                                                className="flex items-center gap-2 text-white bg-neutral-900 hover:bg-brand-600 px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all"
+                                                                                className={navBtnClass}
                                                                             >
-                                                                                <span className="text-sm font-bold">下一步：{nextStep.title.replace(/^步驟 \d+[:：]\s*/, '')}</span>
+                                                                                <span className="text-sm">下一步：{nextStep.title.replace(/^步驟 \d+[:：]\s*/, '')}</span>
                                                                                 <ArrowLeft className="w-4 h-4 rotate-180" />
                                                                             </button>
                                                                         ) : (
                                                                             <button 
                                                                                 onClick={() => setActiveTab('impacts')}
-                                                                                className="flex items-center gap-2 text-brand-600 bg-brand-50 hover:bg-brand-100 px-5 py-2.5 rounded-lg transition-colors"
+                                                                                className={navBtnClass}
                                                                             >
-                                                                                <span className="text-sm font-bold">檢查跨頁面影響</span>
+                                                                                <span className="text-sm">檢查跨頁面影響</span>
                                                                                 <ArrowLeft className="w-4 h-4 rotate-180" />
                                                                             </button>
                                                                         )}
@@ -1388,62 +1491,6 @@
                                                 checkedItems={checkedItems}
                                                 toggleCheck={toggleCheck}
                                             />
-                                        </div>
-                                    )}
-
-                                    {/* 3. USER FLOW TAB */}
-                                    {activeTab === 'userflow' && result.user_flow_mermaid && (
-                                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                                            <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50/50">
-                                                <div className="flex items-center gap-2 pl-2">
-                                                    <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
-                                                        <button 
-                                                            onClick={() => setShowDiagram(true)}
-                                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-base font-medium transition-all ${showDiagram ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                                                        >
-                                                            <Image className="w-4 h-4"/> 預覽圖表
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => setShowDiagram(false)}
-                                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-base font-medium transition-all ${!showDiagram ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                                                        >
-                                                            <CodeIcon className="w-4 h-4"/> 原始碼
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="flex items-center gap-2">
-                                                    <a 
-                                                        href={getMermaidLiveUrl(result.user_flow_mermaid)}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center gap-1.5 text-base text-neutral-600 hover:text-brand-600 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-brand-200"
-                                                    >
-                                                        <ExternalLink className="w-3.5 h-3.5" />
-                                                        前往 Mermaid Live
-                                                    </a>
-                                                    <div className="h-4 w-px bg-gray-300 mx-1"></div>
-                                                    <button
-                                                        onClick={copyMermaid}
-                                                        className="flex items-center gap-1.5 text-base text-brand-600 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors"
-                                                    >
-                                                        {mermaidCopied ? <Check className="w-3.5 h-3.5" /> : <Clipboard className="w-3.5 h-3.5" />}
-                                                        {mermaidCopied ? '已複製' : '複製代碼'}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="bg-white min-h-[400px]">
-                                                {showDiagram ? (
-                                                     <MermaidDiagram code={result.user_flow_mermaid} />
-                                                ) : (
-                                                    <div className="bg-gray-50 p-0 overflow-hidden h-full">
-                                                        <pre className="font-mono text-base text-gray-600 w-full overflow-auto p-6 bg-gray-50/50 min-h-[300px]">
-                                                            {result.user_flow_mermaid}
-                                                        </pre>
-                                                    </div>
-                                                )}
-                                            </div>
                                         </div>
                                     )}
 
